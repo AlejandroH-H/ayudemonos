@@ -1,31 +1,18 @@
 // Script de preparación de la base de datos.
-//   1. Ejecuta schema.sql (crea tipos y tablas).
-//   2. Siembra una autoridad de ejemplo por cada estado (idempotente).
+//   1. Ejecuta schema.sql (crea/migra tablas).
+//   2. Siembra una cuenta de administrador (para moderación) desde variables de entorno.
 //
 // Uso:  npm run db:setup
 //
-// IMPORTANTE: los correos y la contraseña aquí son DE EJEMPLO para desarrollo.
-// Antes de producción deben sustituirse por los datos oficiales de Protección
-// Civil / gobernaciones de cada estado.
+// Variables: ADMIN_EMAIL, ADMIN_PASSWORD (si faltan, usa valores de ejemplo y avisa).
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 const { pool } = require('./pool');
-const { ESTADOS } = require('./estados');
 
-// Contraseña de ejemplo para todas las autoridades sembradas (solo desarrollo).
-const DEFAULT_PASSWORD = process.env.SEED_AUTHORITY_PASSWORD || 'Cambiar123*';
-
-// Convierte "Distrito Capital" -> "distrito-capital" para construir el email.
-function slug(estado) {
-  return estado
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
-}
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@reportes-sismo.ve';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Cambiar123*';
 
 // Conecta reintentando: el plan gratuito de Neon suspende la base por
 // inactividad y la primera conexión (que la "despierta") puede resetearse.
@@ -50,26 +37,22 @@ async function main() {
     console.log('→ Aplicando schema.sql ...');
     await client.query(schema);
 
-    console.log('→ Sembrando autoridades (una por estado) ...');
-    const passwordHash = await bcrypt.hash(DEFAULT_PASSWORD, 10);
+    console.log('→ Sembrando cuenta de administrador ...');
+    const passwordHash = await bcrypt.hash(ADMIN_PASSWORD, 10);
+    await client.query(
+      `INSERT INTO admins (email, password_hash)
+       VALUES ($1, $2)
+       ON CONFLICT (email) DO NOTHING`,
+      [ADMIN_EMAIL.toLowerCase(), passwordHash]
+    );
 
-    for (const estado of ESTADOS) {
-      const email = `proteccioncivil.${slug(estado)}@reportes-sismo.ve`;
-      const organismo = `Protección Civil ${estado}`;
-      // Idempotente: si el email ya existe, no se duplica.
-      await client.query(
-        `INSERT INTO autoridades (estado, organismo, email, password_hash)
-         VALUES ($1, $2, $3, $4)
-         ON CONFLICT (email) DO NOTHING`,
-        [estado, organismo, email, passwordHash]
-      );
+    const { rows } = await client.query('SELECT COUNT(*)::int AS n FROM reportes');
+    console.log(`✓ Listo. Reportes en la base: ${rows[0].n}`);
+    console.log('\nAcceso de administrador (moderación):');
+    console.log(`  email:    ${ADMIN_EMAIL.toLowerCase()}`);
+    if (!process.env.ADMIN_PASSWORD) {
+      console.log(`  password: ${ADMIN_PASSWORD}   (⚠ define ADMIN_PASSWORD en .env)`);
     }
-
-    const { rows } = await client.query('SELECT COUNT(*)::int AS n FROM autoridades');
-    console.log(`✓ Listo. Autoridades en la base: ${rows[0].n}`);
-    console.log('\nCredenciales de ejemplo para el panel:');
-    console.log(`  email:    proteccioncivil.merida@reportes-sismo.ve`);
-    console.log(`  password: ${DEFAULT_PASSWORD}`);
   } finally {
     client.release();
     await pool.end();

@@ -1,16 +1,17 @@
-<%- include('../partials/header', { titulo: 'Acceso autoridades' }) %>
+<%- include('../partials/header', { titulo: 'Acceso administrador' }) %>
 
 <div class="card auth-card">
-  <h1>Panel de autoridades</h1>
-  <p class="muted">Accede para ver los reportes de tu estado.</p>
+  <h1>Moderación</h1>
+  <p class="muted">Acceso solo para administradores.</p>
 
   <% if (error) { %>
     <div class="alert alert-error" role="alert"><%= error %></div>
   <% } %>
 
-  <form action="/panel/login" method="post" class="form">
+  <form action="/admin/login" method="post" class="form">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
     <div class="field">
-      <label for="email">Correo institucional</label>
+      <label for="email">Correo</label>
       <input type="email" id="email" name="email" required autocomplete="username" />
     </div>
     <div class="field">

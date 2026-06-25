@@ -13,14 +13,14 @@
       <span>Reportes&nbsp;Sismo</span>
     </a>
     <nav class="topnav">
+      <a href="/">Inicio</a>
       <a href="/reportar">Crear reporte</a>
-      <% if (typeof autoridad !== 'undefined' && autoridad) { %>
-        <a href="/panel">Panel</a>
-        <form action="/panel/logout" method="post" class="inline-form">
+      <% if (typeof admin !== 'undefined' && admin) { %>
+        <a href="/admin">Moderación</a>
+        <form action="/admin/logout" method="post" class="inline-form">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
           <button type="submit" class="link-btn">Salir</button>
         </form>
-      <% } else { %>
-        <a href="/panel/login">Autoridades</a>
       <% } %>
     </nav>
   </header>

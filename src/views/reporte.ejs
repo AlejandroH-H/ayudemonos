@@ -1,0 +1,132 @@
+<%- include('partials/header', { titulo: 'Reporte ' + reporte.codigo }) %>
+<%
+  const tipoLabels = {
+    medica: 'Emergencia médica', rescate: 'Rescate', refugio: 'Refugio', agua: 'Agua',
+    alimentos: 'Alimentos', desaparecido: 'Persona desaparecida', dano_estructural: 'Daño estructural', otro: 'Otro'
+  };
+  function fecha(d){ return new Date(d).toLocaleString('es-VE'); }
+%>
+
+<p><a href="/" class="back-link">← Volver al inicio</a></p>
+
+<div class="detalle-grid">
+  <div class="card">
+    <div class="detalle-head">
+      <h1><%= reporte.persona_nombre ? reporte.persona_nombre : (tipoLabels[reporte.tipo_emergencia] || reporte.tipo_emergencia) %></h1>
+      <% if (reporte.subsanado) { %>
+        <span class="badge badge-resuelto">Subsanado</span>
+      <% } else { %>
+        <span class="badge badge-recibido">Activo</span>
+      <% } %>
+    </div>
+
+    <div class="detalle-head-tags">
+      <span class="sev-tag sev-tag-<%= reporte.severidad %>"><%= reporte.severidad %></span>
+      <span class="tipo-pill"><%= tipoLabels[reporte.tipo_emergencia] || reporte.tipo_emergencia %></span>
+    </div>
+
+    <dl class="resumen">
+      <div><dt>Estado</dt><dd><%= reporte.estado %></dd></div>
+      <div><dt>Municipio</dt><dd><%= reporte.municipio || '—' %></dd></div>
+      <div><dt>Dirección</dt><dd><%= reporte.direccion || '—' %></dd></div>
+      <div><dt>Personas afectadas</dt><dd><%= reporte.personas_afectadas %></dd></div>
+      <div><dt>Publicado</dt><dd><%= fecha(reporte.creado_en) %></dd></div>
+      <% if (reporte.subsanado) { %>
+        <div><dt>Subsanado</dt><dd><%= fecha(reporte.subsanado_en) %></dd></div>
+      <% } %>
+    </dl>
+
+    <h3>Descripción</h3>
+    <p class="descripcion"><%= reporte.descripcion %></p>
+
+    <% if (reporte.lat && reporte.lng) { %>
+      <p><a class="btn btn-ghost btn-sm" target="_blank" rel="noopener"
+            href="https://www.openstreetmap.org/?mlat=<%= reporte.lat %>&mlon=<%= reporte.lng %>#map=17/<%= reporte.lat %>/<%= reporte.lng %>">
+        Ver ubicación en el mapa
+      </a></p>
+    <% } %>
+
+    <% if (reporte.foto_url) { %>
+      <h3>Foto</h3>
+      <a href="<%= reporte.foto_url %>" target="_blank" rel="noopener">
+        <img class="evidencia" src="<%= reporte.foto_url %>" alt="Foto del reporte" />
+      </a>
+    <% } %>
+  </div>
+
+  <aside class="card subsanar-box">
+    <h3>Estado del reporte</h3>
+    <% if (reporte.subsanado) { %>
+      <p class="resuelto-msg">✓ Este reporte fue marcado como <strong>subsanado</strong>.</p>
+    <% } else { %>
+      <p>¿La persona fue encontrada o la situación se resolvió? Si tienes el
+        <strong>código de resolución</strong>, márcalo como subsanado:</p>
+      <% if (subsanarError) { %>
+        <div class="alert alert-error" role="alert"><%= subsanarError %></div>
+      <% } %>
+      <form action="/reporte/<%= reporte.codigo %>/subsanar" method="post" class="form">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <div class="field">
+          <label for="codigo">Código de resolución</label>
+          <input type="text" id="codigo" name="codigo" placeholder="SIS-XXXXXX" required />
+        </div>
+        <button type="submit" class="btn btn-primary">Marcar como subsanado</button>
+      </form>
+    <% } %>
+    <p class="confirmaciones-tag" title="Confirmaciones de la comunidad">
+      🙌 <%= confirmaciones %> confirmación(es) de la comunidad
+    </p>
+  </aside>
+</div>
+
+<section id="comentarios" class="card">
+  <h2 class="section-title">Comentarios <span class="count">(<%= comentarios.length %>)</span></h2>
+
+  <% if (errores && errores.length) { %>
+    <div class="alert alert-error" role="alert">
+      <ul><% errores.forEach(function(e){ %><li><%= e %></li><% }) %></ul>
+    </div>
+  <% } %>
+
+  <% if (!comentarios.length) { %>
+    <p class="muted">Sé el primero en comentar. ¿Sabes algo sobre este reporte?</p>
+  <% } else { %>
+    <ul class="comentarios">
+      <% comentarios.forEach(function(c){ %>
+        <li class="comentario <%= c.es_confirmacion ? 'comentario-confirma' : '' %>">
+          <div class="comentario-head">
+            <strong><%= c.autor || 'Anónimo' %></strong>
+            <% if (c.es_confirmacion) { %><span class="chip-confirma">✓ confirma hallazgo</span><% } %>
+            <span class="muted"><%= fecha(c.creado_en) %></span>
+          </div>
+          <p><%= c.cuerpo %></p>
+        </li>
+      <% }) %>
+    </ul>
+  <% } %>
+
+  <h3>Añadir un comentario</h3>
+  <form action="/reporte/<%= reporte.codigo %>/comentario" method="post" class="form">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+    <div class="form-grid">
+      <div class="field">
+        <label for="autor">Tu nombre (opcional)</label>
+        <input type="text" id="autor" name="autor" maxlength="80" placeholder="Anónimo" />
+      </div>
+    </div>
+    <div class="field">
+      <label for="cuerpo">Comentario <span class="req">*</span></label>
+      <textarea id="cuerpo" name="cuerpo" rows="3" minlength="2" maxlength="1000" required
+                placeholder="Ej.: La vi en el refugio de la escuela, está a salvo."></textarea>
+    </div>
+    <label class="check-row">
+      <input type="checkbox" name="es_confirmacion" />
+      Confirmo que la persona fue encontrada / la situación se resolvió
+    </label>
+    <div class="actions">
+      <button type="submit" class="btn btn-primary">Comentar</button>
+    </div>
+  </form>
+</section>
+
+<%- include('partials/footer') %>

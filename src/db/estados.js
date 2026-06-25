@@ -1,5 +1,5 @@
 // Catálogo de los 24 entes federales de Venezuela.
-// Se usa tanto para validar el formulario como para sembrar las autoridades.
+// Se usa para validar y poblar el selector de estado del formulario.
 const ESTADOS = [
   'Amazonas',
   'Anzoátegui',

@@ -22,6 +22,15 @@
 <% } %>
 
 <form action="/reportar" method="post" enctype="multipart/form-data" class="card form" novalidate>
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+  <div class="field">
+    <label for="persona_nombre">Nombre de la persona afectada / buscada</label>
+    <input type="text" id="persona_nombre" name="persona_nombre" maxlength="120"
+           placeholder="Opcional — déjalo vacío si es una situación general"
+           value="<%= v.persona_nombre || '' %>" />
+  </div>
+
   <div class="form-grid">
     <div class="field">
       <label for="estado">Estado <span class="req">*</span></label>
@@ -76,7 +85,7 @@
   </div>
 
   <fieldset class="field">
-    <legend>Contacto (opcional, ayuda a las autoridades a ubicarte)</legend>
+    <legend>Contacto (opcional, ayuda a quienes puedan auxiliar)</legend>
     <div class="form-grid">
       <div class="field">
         <label for="contacto_nombre">Nombre</label>

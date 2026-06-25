@@ -1,145 +1,86 @@
 # Sistema de Reportes Sismo · Venezuela
 
-Sistema web para que las personas afectadas por un sismo **creen y guarden reportes**
-de su situación. Cada reporte se **enruta automáticamente a las autoridades del estado**
-seleccionado (correo + panel de seguimiento).
+Tablero **público y comunitario** para reportar y seguir a personas/situaciones afectadas
+por un sismo. Cualquiera crea un reporte, se publica para toda la comunidad, y la gente puede
+**comentar** y **confirmar** cuando una persona es encontrada o la situación se resuelve.
 
-- **Reporte ciudadano anónimo** (sin registro) con foto opcional.
-- **Notificación automática por estado**: al guardar, se envía un correo a la autoridad
-  del estado correspondiente.
-- **Panel de autoridades**: cada autoridad inicia sesión y ve **solo** los reportes de su
-  estado, con filtro por estado de seguimiento y cambio de estado (recibido → en atención
-  → resuelto).
-- **Consulta pública por código** de seguimiento.
+## Funcionalidades
+
+- **Reporte anónimo** (sin cuenta) con foto opcional (Cloudinary) y ubicación GPS opcional.
+- **Tablero público** en la portada con: total de reportes, lista de **activos** (sin
+  subsanar) y lista de **subsanados**, y total de personas afectadas.
+- **Comentarios** por reporte; cada comentario puede marcarse como *"confirmo que fue
+  encontrada / resuelto"*, lo que suma a un **contador de confirmaciones**.
+- **Resolución verificable** de cada reporte (ver abajo).
+- **Moderación** de administrador para ocultar abuso y forzar cierres.
+
+## ¿Cómo se comprueba que un reporte fue "subsanado"?
+
+Tres capas, de mayor a menor autoridad:
+
+1. **Código de resolución (autoritativo).** Al crear el reporte se genera un código privado
+   (`SIS-XXXXXX`). Para marcarlo como subsanado hay que introducir ese código → solo quien lo
+   creó (o alguien de confianza a quien se lo dio) puede cerrarlo. Evita cierres falsos.
+2. **Confirmaciones de la comunidad (transparencia).** Cualquiera puede comentar y confirmar
+   un hallazgo; se muestra el contador, pero **no cambia el estado oficial** por sí solo.
+3. **Moderación de administrador.** El operador puede forzar el cierre u ocultar contenido.
 
 ## Stack
 
-Node.js · Express · EJS (vistas server-rendered) · PostgreSQL (`pg`) ·
-Cloudinary (fotos, vía `multer` en memoria) · Nodemailer (correo) ·
-express-validator · express-session + bcrypt · helmet · express-rate-limit.
-
-## Requisitos
-
-- Node.js 18+ (usa `node --watch` para `npm run dev`).
-- PostgreSQL 13+.
-- (Opcional) Cuenta de Cloudinary para subir fotos.
-- Para correo en desarrollo **no necesitas SMTP**: se usa una cuenta de prueba de Ethereal.
+Node.js · Express · EJS · PostgreSQL (`pg` / driver serverless de Neon) · Cloudinary ·
+express-validator · express-session + bcrypt (solo admin) · helmet · express-rate-limit ·
+CSRF propio por cookie (double-submit, sin estado).
 
 ## Puesta en marcha
 
 ```bash
-# 1. Dependencias
 npm install
-
-# 2. Variables de entorno
-cp .env.example .env        # en Windows PowerShell: Copy-Item .env.example .env
-#    Edita .env y configura al menos DATABASE_URL y SESSION_SECRET.
-#    Para fotos, añade CLOUDINARY_URL. Para correo real, MAIL_TRANSPORT=smtp + SMTP_*.
-
-# 3. Crear el esquema y sembrar las 24 autoridades (una por estado)
-npm run db:setup
-
-# 4. Arrancar
-npm run dev     # o: npm start
+cp .env.example .env        # PowerShell: Copy-Item .env.example .env
+#   Configura DATABASE_URL, SESSION_SECRET, CLOUDINARY_URL, ADMIN_EMAIL, ADMIN_PASSWORD.
+npm run db:setup            # crea/migra tablas y siembra el admin
+npm run dev                 # o: npm start
 ```
 
-Abre **http://localhost:3000**.
+Abre **http://localhost:3000**. El acceso de moderación está en **/admin/login** con las
+credenciales de `ADMIN_EMAIL` / `ADMIN_PASSWORD`.
 
-### Credenciales de ejemplo del panel
-
-`npm run db:setup` crea una autoridad por estado con el patrón de correo
-`proteccioncivil.<estado>@reportes-sismo.ve` y la contraseña por defecto `Cambiar123*`
-(configurable con `SEED_AUTHORITY_PASSWORD`). Por ejemplo:
-
-```
-email:    proteccioncivil.merida@reportes-sismo.ve
-password: Cambiar123*
-```
-
-> ⚠ Los correos y la contraseña sembrados son **de ejemplo para desarrollo**. Antes de
-> producción, sustitúyelos por los datos oficiales de Protección Civil / gobernaciones.
+Verificación rápida de Cloudinary: `npm run test:cloudinary` (debe imprimir una `secure_url`).
 
 ## Rutas
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| GET  | `/` | Inicio |
-| GET  | `/reportar` | Formulario de reporte |
-| POST | `/reportar` | Crea el reporte, sube la foto, notifica a la autoridad del estado |
-| GET  | `/reporte/:codigo` | Consulta pública por código |
-| GET/POST | `/panel/login` · `/panel/logout` | Acceso autoridades |
-| GET  | `/panel` | Reportes del estado de la autoridad (filtro por seguimiento) |
-| GET  | `/panel/reporte/:id` | Detalle del reporte |
-| POST | `/panel/reporte/:id/seguimiento` | Cambia el estado de seguimiento |
-
-## Cómo verificar el flujo completo
-
-1. `npm run dev` y abre `/reportar`.
-2. Elige un estado (p. ej. **Mérida**), completa el formulario, adjunta una foto y envía.
-3. Verás la página de confirmación con un **código de seguimiento** (`SIS-XXXXXX`).
-4. En la consola del servidor aparece la **URL de previsualización de Ethereal**: ábrela y
-   confirma que el correo salió **a la autoridad de Mérida**.
-5. En `/panel/login` entra como `proteccioncivil.merida@...`: debes ver el reporte.
-   Entra como otra autoridad (otro estado): **no** debe verlo (aislamiento por estado).
-6. Cambia el seguimiento a "en atención" y vuelve a consultar `/reporte/<codigo>`.
-
-## Correo con Gmail (producción)
-
-El sistema envía un correo a la autoridad del estado de cada reporte. Para usar Gmail:
-
-1. Usa (o crea) una cuenta Gmail dedicada, p. ej. `reportes.sismo.ve@gmail.com`.
-2. Activa la **Verificación en 2 pasos** en la cuenta de Google.
-3. Genera una **Contraseña de aplicación**: Google Account → Seguridad → *Contraseñas de
-   aplicaciones* → copia los 16 caracteres.
-4. Configura las variables:
-   ```
-   MAIL_TRANSPORT=smtp
-   SMTP_HOST=smtp.gmail.com
-   SMTP_PORT=587
-   SMTP_SECURE=false
-   SMTP_USER=reportes.sismo.ve@gmail.com
-   SMTP_PASS=<contraseña de aplicación de 16 caracteres>
-   MAIL_FROM="Reportes Sismo <reportes.sismo.ve@gmail.com>"
-   ```
-
-> **Importante:** con Gmail, `MAIL_FROM` debe usar la **misma dirección** que `SMTP_USER`.
-> Límite ~500 correos/día. **Migrar a Brevo/SendGrid** (mejor para volumen): cambia solo
-> `SMTP_HOST`, `SMTP_USER` y `SMTP_PASS`; el resto del código no cambia.
->
-> Nota: en una red que filtra el puerto 587, el envío SMTP **solo funcionará desde el
-> servidor desplegado** (Render), no desde tu PC local.
+| GET  | `/` | Portada: estadísticas + listas de activos y subsanados |
+| GET/POST | `/reportar` | Crear reporte (foto opcional → Cloudinary) |
+| GET  | `/reporte/:codigo/creado` | Confirmación con el código de resolución |
+| GET  | `/reporte/:codigo` | Detalle público + comentarios |
+| POST | `/reporte/:codigo/comentario` | Añadir comentario (opcionalmente confirmación) |
+| POST | `/reporte/:codigo/subsanar` | Marcar subsanado con el código |
+| GET/POST | `/admin/login` · `/admin/logout` | Acceso del administrador |
+| GET  | `/admin` · `/admin/reporte/:id` | Moderación |
+| POST | `/admin/reporte/:id/oculto` · `/subsanar` · `/admin/comentario/:id/oculto` | Acciones de moderación |
 
 ## Despliegue en Render (gratis)
 
-El repo incluye `render.yaml` (Blueprint). La base de datos es **Neon** (externa), ya con
-esquema y 24 autoridades sembradas.
+El repo incluye `render.yaml` (Blueprint). La base de datos es **Neon** (externa).
 
-1. Sube el proyecto a un repositorio de **GitHub**.
-2. En **Render** → *New* → *Blueprint* → conecta el repo. Render detecta `render.yaml`.
-3. Rellena las variables marcadas como secretas (no van en el repo):
-   `DATABASE_URL` (Neon), `CLOUDINARY_URL`, `SESSION_SECRET`, `SMTP_USER`, `SMTP_PASS`,
-   `MAIL_FROM`. (`MAIL_TRANSPORT=smtp`, `SMTP_HOST/PORT/SECURE` y `NODE_ENV=production` ya
-   vienen en el Blueprint.)
-4. Tras el primer deploy, copia la URL `https://<nombre>.onrender.com` y ponla en la
-   variable `APP_URL` → guarda (re-despliega). Así los enlaces de los correos y del panel
-   apuntan al dominio correcto.
+1. Sube el proyecto a **GitHub**.
+2. En **Render** → *New* → *Blueprint* → conecta el repo (detecta `render.yaml`).
+3. Rellena las variables secretas: `DATABASE_URL` (Neon), `CLOUDINARY_URL`,
+   `ADMIN_EMAIL`, `ADMIN_PASSWORD`. (`NODE_ENV=production` y `SESSION_SECRET` ya vienen
+   en el Blueprint.)
+4. Tras el primer deploy, pon la URL `https://<nombre>.onrender.com` en `APP_URL` y redesplega.
 
 > El plan gratuito **duerme** el servicio tras ~15 min de inactividad (primer acceso
-> ~30–50 s). Para conectar un dominio `.com` propio: cómpralo (Namecheap/Porkbun/Cloudflare)
-> y en Render → *Settings* → *Custom Domains* añade el dominio y apunta el DNS según indique.
+> ~30–50 s). Para un dominio `.com` propio: cómpralo y añádelo en Render → *Settings* →
+> *Custom Domains*.
 
-## Resolución de problemas de red
+## Nota de red (drivers)
 
-Algunas redes (firewalls corporativos, antivirus con inspección SSL, ciertos ISP)
-**resetean conexiones TLS en puertos distintos del 443**, lo que rompe Postgres (5432)
-y SMTP (587/465). Soluciones ya integradas:
-
-- **Base de datos:** si usas **Neon**, el proyecto conmuta solo al *driver serverless*
-  (`@neondatabase/serverless`), que conecta por **WebSocket sobre el 443**. No tienes que
-  hacer nada; basta con que el `DATABASE_URL` contenga `neon.tech`.
-- **Correo:** usa `MAIL_TRANSPORT=json` para ver a qué autoridad se dirige cada reporte sin
-  enviar nada por red. Para envío real desde una red restringida, usa un proveedor con API
-  HTTP (sobre 443) o despliega en la nube, donde los puertos no están filtrados.
+Algunas redes resetean conexiones TLS en puertos distintos del 443 (rompe Postgres en 5432).
+Por eso, si `DATABASE_URL` apunta a **Neon**, el proyecto usa automáticamente el *driver
+serverless* por WebSocket/443. El helper de consultas (`src/db/pool.js`) reintenta ante
+fallos transitorios (p. ej. el arranque en frío de Neon).
 
 ## Estructura
 
@@ -147,11 +88,13 @@ y SMTP (587/465). Soluciones ya integradas:
 src/
   app.js · server.js
   db/        pool.js · schema.sql · estados.js · setup.js
-  config/    cloudinary.js · mailer.js
-  middlewares/  upload.js · auth.js · validate.js
-  routes/    public.routes.js · panel.routes.js
-  controllers/  reportes.controller.js · panel.controller.js
-  services/  reportes.service.js · cloudinary.service.js · notificaciones.service.js
-  views/     index · reportar · confirmacion · error · panel/{login,lista,detalle} · partials
+  config/    cloudinary.js
+  middlewares/  upload.js · auth.js · validate.js · csrf.js
+  routes/    public.routes.js · admin.routes.js
+  controllers/  reportes.controller.js · admin.controller.js
+  services/  reportes.service.js · comentarios.service.js · cloudinary.service.js
+  utils/     html.js
+  views/     index · reportar · confirmacion · reporte · error · admin/{login,panel,detalle} · partials
   public/    css/styles.css · js/geo.js
+scripts/     test-cloudinary.js
 ```

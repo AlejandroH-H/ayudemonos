@@ -31,6 +31,7 @@ const reglasReporte = [
     .trim()
     .isLength({ min: 10, max: 2000 })
     .withMessage('La descripción debe tener entre 10 y 2000 caracteres.'),
+  body('persona_nombre').trim().isLength({ max: 120 }).optional({ values: 'falsy' }),
   body('municipio').trim().isLength({ max: 120 }).optional({ values: 'falsy' }),
   body('direccion').trim().isLength({ max: 300 }).optional({ values: 'falsy' }),
   body('personas_afectadas')
@@ -43,6 +44,14 @@ const reglasReporte = [
   body('lng').optional({ values: 'falsy' }).toFloat().isFloat({ min: -180, max: 180 }),
 ];
 
+const reglasComentario = [
+  body('cuerpo')
+    .trim()
+    .isLength({ min: 2, max: 1000 })
+    .withMessage('El comentario debe tener entre 2 y 1000 caracteres.'),
+  body('autor').trim().isLength({ max: 80 }).optional({ values: 'falsy' }),
+];
+
 // Recoge los errores de validación en req.erroresValidacion (array de mensajes).
 function recolectarErrores(req, res, next) {
   const result = validationResult(req);
@@ -52,4 +61,10 @@ function recolectarErrores(req, res, next) {
   next();
 }
 
-module.exports = { reglasReporte, recolectarErrores, TIPOS, SEVERIDADES };
+module.exports = {
+  reglasReporte,
+  reglasComentario,
+  recolectarErrores,
+  TIPOS,
+  SEVERIDADES,
+};

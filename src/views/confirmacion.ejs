@@ -1,36 +1,19 @@
-<%- include('partials/header', { titulo: 'Reporte registrado' }) %>
-<%
-  const tipoLabels = {
-    medica: 'Emergencia médica', rescate: 'Rescate', refugio: 'Refugio',
-    agua: 'Agua', alimentos: 'Alimentos', desaparecido: 'Persona desaparecida',
-    dano_estructural: 'Daño estructural', otro: 'Otro'
-  };
-  const segLabels = { recibido: 'Recibido', en_atencion: 'En atención', resuelto: 'Resuelto' };
-%>
+<%- include('partials/header', { titulo: 'Reporte publicado' }) %>
 
 <div class="card confirm">
   <div class="confirm-check" aria-hidden="true">✓</div>
-  <h1>Reporte registrado</h1>
-  <p>Tu reporte fue enviado a las autoridades de <strong><%= reporte.estado %></strong>.</p>
+  <h1>Reporte publicado</h1>
+  <p>Tu reporte ya es visible para la comunidad.</p>
 
-  <p class="codigo-label">Guarda tu código de seguimiento:</p>
+  <p class="codigo-label">Guarda este <strong>código de resolución</strong>. Lo necesitarás
+    para marcar el reporte como <strong>subsanado</strong> (persona encontrada / situación resuelta):</p>
   <p class="codigo"><%= reporte.codigo %></p>
-
-  <dl class="resumen">
-    <div><dt>Estado</dt><dd><%= reporte.estado %></dd></div>
-    <div><dt>Tipo</dt><dd><%= tipoLabels[reporte.tipo_emergencia] || reporte.tipo_emergencia %></dd></div>
-    <div><dt>Severidad</dt><dd><%= reporte.severidad %></dd></div>
-    <div><dt>Seguimiento</dt>
-      <dd><span class="badge badge-<%= reporte.seguimiento %>"><%= segLabels[reporte.seguimiento] || reporte.seguimiento %></span></dd>
-    </div>
-  </dl>
-
-  <p class="muted">Puedes volver a consultar el estado en cualquier momento entrando a
-    <code><%= (appUrl || '') %>/reporte/<%= reporte.codigo %></code></p>
+  <p class="muted">Sin este código no podrás cerrarlo. Guárdalo en un lugar seguro o compártelo
+    solo con quien confíes.</p>
 
   <div class="actions">
-    <a class="btn btn-ghost" href="/">Volver al inicio</a>
-    <a class="btn btn-primary" href="/reportar">Crear otro reporte</a>
+    <a class="btn btn-primary" href="/reporte/<%= reporte.codigo %>">Ver mi reporte</a>
+    <a class="btn btn-ghost" href="/">Ir al inicio</a>
   </div>
 </div>
 

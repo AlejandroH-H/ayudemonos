@@ -16,16 +16,7 @@ services:
         value: production
       - key: NODE_VERSION
         value: "22"
-      # Correo (valores fijos para Gmail; credenciales abajo como secretas)
-      - key: MAIL_TRANSPORT
-        value: smtp
-      - key: SMTP_HOST
-        value: smtp.gmail.com
-      - key: SMTP_PORT
-        value: "587"
-      - key: SMTP_SECURE
-        value: "false"
-      # Secreto de sesión generado por Render
+      # Secreto de sesión generado por Render (login del admin)
       - key: SESSION_SECRET
         generateValue: true
       # ── Secretas: rellénalas en el panel de Render ──
@@ -33,11 +24,9 @@ services:
         sync: false
       - key: CLOUDINARY_URL
         sync: false
-      - key: SMTP_USER
+      - key: ADMIN_EMAIL
         sync: false
-      - key: SMTP_PASS
-        sync: false
-      - key: MAIL_FROM
+      - key: ADMIN_PASSWORD
         sync: false
       # Pon aquí https://<nombre>.onrender.com tras el primer deploy
       - key: APP_URL

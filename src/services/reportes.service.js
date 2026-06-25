@@ -1,8 +1,8 @@
-// Acceso a datos de reportes y autoridades (PostgreSQL).
+// Acceso a datos de reportes (PostgreSQL) — modelo comunitario.
 const crypto = require('crypto');
 const { query } = require('../db/pool');
 
-// Genera un código de seguimiento corto y legible, p. ej. "SIS-7F3K9Q".
+// Genera un código de resolución corto y legible, p. ej. "SIS-7F3K9Q".
 function generarCodigo() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sin caracteres ambiguos
   let s = '';
@@ -16,10 +16,10 @@ async function crearReporte(data) {
   const codigo = generarCodigo();
   const { rows } = await query(
     `INSERT INTO reportes
-       (codigo, estado, municipio, direccion, lat, lng, tipo_emergencia,
-        severidad, descripcion, personas_afectadas, contacto_nombre,
-        contacto_telefono, foto_url)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+       (codigo, estado, municipio, direccion, lat, lng, persona_nombre,
+        tipo_emergencia, severidad, descripcion, personas_afectadas,
+        contacto_nombre, contacto_telefono, foto_url)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
      RETURNING *`,
     [
       codigo,
@@ -28,6 +28,7 @@ async function crearReporte(data) {
       data.direccion || null,
       data.lat ?? null,
       data.lng ?? null,
+      data.persona_nombre || null,
       data.tipo_emergencia,
       data.severidad,
       data.descripcion,
@@ -40,70 +41,91 @@ async function crearReporte(data) {
   return rows[0];
 }
 
-// Marca un reporte como notificado.
-async function marcarNotificado(id) {
-  await query('UPDATE reportes SET notificado = true WHERE id = $1', [id]);
-}
-
-// Consulta pública por código de seguimiento.
-async function obtenerPorCodigo(codigo) {
-  const { rows } = await query('SELECT * FROM reportes WHERE codigo = $1', [codigo]);
-  return rows[0] || null;
-}
-
-// Busca la autoridad responsable de un estado (la primera registrada).
-async function autoridadPorEstado(estado) {
+// Consulta pública por código (no incluye ocultos salvo que se pida).
+async function obtenerPorCodigo(codigo, incluirOcultos = false) {
   const { rows } = await query(
-    'SELECT * FROM autoridades WHERE estado = $1 ORDER BY id LIMIT 1',
-    [estado]
+    `SELECT * FROM reportes
+     WHERE codigo = $1 ${incluirOcultos ? '' : 'AND oculto = false'}`,
+    [codigo]
   );
   return rows[0] || null;
 }
 
-// Lista los reportes de un estado, con filtro opcional por seguimiento.
-async function listarPorEstado(estado, seguimiento) {
-  if (seguimiento) {
-    const { rows } = await query(
-      `SELECT * FROM reportes
-       WHERE estado = $1 AND seguimiento = $2
-       ORDER BY creado_en DESC`,
-      [estado, seguimiento]
-    );
-    return rows;
-  }
+async function obtenerPorId(id) {
+  const { rows } = await query('SELECT * FROM reportes WHERE id = $1', [id]);
+  return rows[0] || null;
+}
+
+// Estadísticas para la vista principal.
+async function estadisticas() {
   const { rows } = await query(
-    'SELECT * FROM reportes WHERE estado = $1 ORDER BY creado_en DESC',
-    [estado]
+    `SELECT
+       COUNT(*)::int AS total,
+       COUNT(*) FILTER (WHERE subsanado = false)::int AS activos,
+       COUNT(*) FILTER (WHERE subsanado = true)::int  AS subsanados,
+       COALESCE(SUM(personas_afectadas), 0)::int      AS personas_afectadas
+     FROM reportes
+     WHERE oculto = false`
+  );
+  return rows[0];
+}
+
+// Lista pública por estado de subsanado (excluye ocultos).
+async function listar(subsanado, limite = 100) {
+  const { rows } = await query(
+    `SELECT * FROM reportes
+     WHERE oculto = false AND subsanado = $1
+     ORDER BY creado_en DESC
+     LIMIT $2`,
+    [subsanado, limite]
   );
   return rows;
 }
 
-// Obtiene un reporte por id, restringido al estado de la autoridad (aislamiento).
-async function obtenerPorIdYEstado(id, estado) {
+// Marca un reporte como subsanado si el código coincide y aún está activo.
+// Devuelve la fila actualizada o null si el código no corresponde.
+async function subsanarPorCodigo(codigo) {
   const { rows } = await query(
-    'SELECT * FROM reportes WHERE id = $1 AND estado = $2',
-    [id, estado]
+    `UPDATE reportes
+     SET subsanado = true, subsanado_en = now(), subsanado_por = 'codigo'
+     WHERE codigo = $1 AND subsanado = false AND oculto = false
+     RETURNING *`,
+    [codigo]
   );
   return rows[0] || null;
 }
 
-// Actualiza el estado de seguimiento, restringido al estado de la autoridad.
-async function actualizarSeguimiento(id, estado, seguimiento) {
+// ── Moderación (admin) ──
+async function listarTodos(limite = 300) {
   const { rows } = await query(
-    `UPDATE reportes SET seguimiento = $1
-     WHERE id = $2 AND estado = $3
-     RETURNING *`,
-    [seguimiento, id, estado]
+    'SELECT * FROM reportes ORDER BY creado_en DESC LIMIT $1',
+    [limite]
   );
-  return rows[0] || null;
+  return rows;
+}
+
+async function fijarOcultoReporte(id, oculto) {
+  await query('UPDATE reportes SET oculto = $1 WHERE id = $2', [oculto, id]);
+}
+
+async function subsanarPorAdmin(id) {
+  await query(
+    `UPDATE reportes
+     SET subsanado = true, subsanado_en = now(), subsanado_por = 'admin'
+     WHERE id = $1`,
+    [id]
+  );
 }
 
 module.exports = {
+  generarCodigo,
   crearReporte,
-  marcarNotificado,
   obtenerPorCodigo,
-  autoridadPorEstado,
-  listarPorEstado,
-  obtenerPorIdYEstado,
-  actualizarSeguimiento,
+  obtenerPorId,
+  estadisticas,
+  listar,
+  subsanarPorCodigo,
+  listarTodos,
+  fijarOcultoReporte,
+  subsanarPorAdmin,
 };

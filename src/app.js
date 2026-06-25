@@ -8,7 +8,8 @@ const pgSession = require('connect-pg-simple')(session);
 const { pool } = require('./db/pool');
 
 const publicRoutes = require('./routes/public.routes');
-const panelRoutes = require('./routes/panel.routes');
+const adminRoutes = require('./routes/admin.routes');
+const { proveerCsrf } = require('./middlewares/csrf');
 
 const app = express();
 
@@ -41,31 +42,38 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ─── Sesión (panel de autoridades) ─────────────────────────
-app.use(
-  session({
-    store: new pgSession({ pool, tableName: 'session' }),
-    secret: process.env.SESSION_SECRET || 'inseguro-cambiar',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      maxAge: 1000 * 60 * 60 * 8, // 8 horas
-      secure: process.env.NODE_ENV === 'production',
-    },
-  })
-);
+// ─── Sesión (solo para el login del admin) ─────────────────
+// En producción se persiste en PostgreSQL; en desarrollo se usa el almacén en
+// memoria (evita depender de la BD para cada sesión). El flujo público NO usa
+// sesión: la protección CSRF es por cookie, sin estado.
+const sessionOptions = {
+  secret: process.env.SESSION_SECRET || 'inseguro-cambiar',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    maxAge: 1000 * 60 * 60 * 8, // 8 horas
+    secure: process.env.NODE_ENV === 'production',
+  },
+};
+if (process.env.NODE_ENV === 'production') {
+  sessionOptions.store = new pgSession({ pool, tableName: 'session' });
+}
+app.use(session(sessionOptions));
 
-// Expone la autoridad autenticada y la URL base a todas las vistas.
+// Token CSRF disponible en todas las vistas (campo oculto _csrf).
+app.use(proveerCsrf);
+
+// Expone el admin autenticado y la URL base a todas las vistas.
 app.use((req, res, next) => {
-  res.locals.autoridad = req.session.autoridad || null;
+  res.locals.admin = req.session.admin || null;
   res.locals.appUrl = process.env.APP_URL || '';
   next();
 });
 
 // ─── Rutas ─────────────────────────────────────────────────
 app.use('/', publicRoutes);
-app.use('/panel', panelRoutes);
+app.use('/admin', adminRoutes);
 
 // ─── 404 ───────────────────────────────────────────────────
 app.use((req, res) => {

@@ -1,5 +1,5 @@
--- Esquema de la base de datos del Sistema de Reportes Sismo
--- Ejecutar contra la base PostgreSQL indicada en DATABASE_URL.
+-- Esquema de la base de datos del Sistema de Reportes Sismo (modelo comunitario).
+-- Idempotente: se puede ejecutar varias veces sin romper datos existentes.
 
 -- Tipos controlados para los catálogos del reporte.
 DO $$
@@ -13,33 +13,18 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'severidad') THEN
     CREATE TYPE severidad AS ENUM ('baja', 'media', 'alta', 'critica');
   END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'seguimiento_estado') THEN
-    CREATE TYPE seguimiento_estado AS ENUM ('recibido', 'en_atencion', 'resuelto');
-  END IF;
 END$$;
 
--- Autoridades: usuarios del panel. Cada una pertenece a un estado y su email
--- es el destino de las notificaciones de los reportes de ese estado.
-CREATE TABLE IF NOT EXISTS autoridades (
-  id            SERIAL PRIMARY KEY,
-  estado        TEXT NOT NULL,
-  organismo     TEXT NOT NULL,
-  email         TEXT NOT NULL UNIQUE,
-  password_hash TEXT NOT NULL,
-  creado_en     TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE INDEX IF NOT EXISTS idx_autoridades_estado ON autoridades (estado);
-
--- Reportes creados por la ciudadanía (anónimos).
+-- Reportes públicos creados por la ciudadanía (anónimos).
 CREATE TABLE IF NOT EXISTS reportes (
   id                 SERIAL PRIMARY KEY,
-  codigo             TEXT NOT NULL UNIQUE,
+  codigo             TEXT NOT NULL UNIQUE,           -- código privado de resolución
   estado             TEXT NOT NULL,
   municipio          TEXT,
   direccion          TEXT,
   lat                DOUBLE PRECISION,
   lng                DOUBLE PRECISION,
+  persona_nombre     TEXT,                            -- persona afectada/buscada (opcional)
   tipo_emergencia    tipo_emergencia NOT NULL,
   severidad          severidad NOT NULL DEFAULT 'media',
   descripcion        TEXT NOT NULL,
@@ -47,15 +32,48 @@ CREATE TABLE IF NOT EXISTS reportes (
   contacto_nombre    TEXT,
   contacto_telefono  TEXT,
   foto_url           TEXT,
-  seguimiento        seguimiento_estado NOT NULL DEFAULT 'recibido',
-  notificado         BOOLEAN NOT NULL DEFAULT false,
+  subsanado          BOOLEAN NOT NULL DEFAULT false,
+  subsanado_en       TIMESTAMPTZ,
+  subsanado_por      TEXT,                            -- 'codigo' | 'admin'
+  oculto             BOOLEAN NOT NULL DEFAULT false,  -- moderación
   creado_en          TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS idx_reportes_estado ON reportes (estado);
+-- Migración suave desde el modelo anterior (tabla reportes preexistente).
+-- Debe ir ANTES de crear índices que referencian estas columnas.
+ALTER TABLE reportes ADD COLUMN IF NOT EXISTS persona_nombre TEXT;
+ALTER TABLE reportes ADD COLUMN IF NOT EXISTS subsanado BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE reportes ADD COLUMN IF NOT EXISTS subsanado_en TIMESTAMPTZ;
+ALTER TABLE reportes ADD COLUMN IF NOT EXISTS subsanado_por TEXT;
+ALTER TABLE reportes ADD COLUMN IF NOT EXISTS oculto BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE reportes DROP COLUMN IF EXISTS seguimiento;
+ALTER TABLE reportes DROP COLUMN IF EXISTS notificado;
+
+CREATE INDEX IF NOT EXISTS idx_reportes_subsanado ON reportes (subsanado);
 CREATE INDEX IF NOT EXISTS idx_reportes_creado_en ON reportes (creado_en DESC);
 
--- Tabla de sesiones para connect-pg-simple (panel de autoridades).
+-- Comentarios públicos de la comunidad sobre un reporte.
+CREATE TABLE IF NOT EXISTS comentarios (
+  id              SERIAL PRIMARY KEY,
+  reporte_id      INTEGER NOT NULL REFERENCES reportes (id) ON DELETE CASCADE,
+  autor           TEXT,                                -- opcional (anónimo permitido)
+  cuerpo          TEXT NOT NULL,
+  es_confirmacion BOOLEAN NOT NULL DEFAULT false,      -- "confirmo que fue encontrada"
+  oculto          BOOLEAN NOT NULL DEFAULT false,      -- moderación
+  creado_en       TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_comentarios_reporte ON comentarios (reporte_id, creado_en);
+
+-- Cuenta(s) de administrador para la moderación.
+CREATE TABLE IF NOT EXISTS admins (
+  id            SERIAL PRIMARY KEY,
+  email         TEXT NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  creado_en     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Tabla de sesiones para connect-pg-simple (login del admin).
 CREATE TABLE IF NOT EXISTS session (
   sid    VARCHAR NOT NULL COLLATE "default",
   sess   JSON NOT NULL,
@@ -64,3 +82,7 @@ CREATE TABLE IF NOT EXISTS session (
 );
 
 CREATE INDEX IF NOT EXISTS idx_session_expire ON session (expire);
+
+-- Limpieza del modelo anterior.
+DROP TABLE IF EXISTS autoridades;
+DROP TYPE IF EXISTS seguimiento_estado;

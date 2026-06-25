@@ -1,35 +1,78 @@
 <%- include('partials/header', { titulo: 'Reportes Sismo Venezuela' }) %>
+<%
+  const tipoLabels = {
+    medica: 'Médica', rescate: 'Rescate', refugio: 'Refugio', agua: 'Agua',
+    alimentos: 'Alimentos', desaparecido: 'Desaparecido', dano_estructural: 'Daño estructural', otro: 'Otro'
+  };
+  function fecha(d){ return new Date(d).toLocaleString('es-VE'); }
+  function tarjeta(r){
+%>
+  <a class="reporte-card" href="/reporte/<%= r.codigo %>">
+    <div class="reporte-card-top">
+      <span class="sev-tag sev-tag-<%= r.severidad %>"><%= r.severidad %></span>
+      <span class="tipo-pill"><%= tipoLabels[r.tipo_emergencia] || r.tipo_emergencia %></span>
+      <% if (r.subsanado) { %><span class="badge badge-resuelto">Subsanado</span><% } %>
+    </div>
+    <h3 class="reporte-card-title"><%= r.persona_nombre ? r.persona_nombre : (r.estado + (r.municipio ? ' — ' + r.municipio : '')) %></h3>
+    <p class="reporte-card-desc"><%= r.descripcion.length > 120 ? r.descripcion.slice(0,120) + '…' : r.descripcion %></p>
+    <div class="reporte-card-meta">
+      <span>📍 <%= r.estado %></span>
+      <span><%= fecha(r.creado_en) %></span>
+    </div>
+  </a>
+<% } %>
 
-<section class="hero">
-  <p class="kicker">Atención a afectados por el sismo</p>
-  <h1>Reporta tu situación y llega directo a las autoridades de tu estado.</h1>
+<section class="hero hero-compact">
+  <p class="kicker">Sistema comunitario de reportes</p>
+  <h1>Reporta, sigue y confirma. Todo a la vista de la comunidad.</h1>
   <p class="lead">
-    Si tú o tu comunidad necesitan ayuda —rescate, atención médica, refugio, agua o
-    alimentos— crea un reporte. Se envía automáticamente a Protección Civil del estado
-    que indiques y recibes un código para seguir su avance.
+    Publica un reporte de una persona o situación afectada por el sismo. Cualquiera puede
+    comentar y confirmar cuando una persona es encontrada o la situación se resuelve.
   </p>
   <div class="cta-row">
-    <a class="btn btn-primary btn-lg" href="/reportar">Crear un reporte ahora</a>
-    <a class="btn btn-ghost btn-lg" href="/panel/login">Soy una autoridad</a>
+    <a class="btn btn-primary btn-lg" href="/reportar">Crear un reporte</a>
   </div>
 </section>
 
-<section class="steps">
-  <div class="step">
-    <span class="step-num">1</span>
-    <h3>Describe la situación</h3>
-    <p>Indica el estado, el tipo de emergencia y qué está ocurriendo. Puedes adjuntar una foto.</p>
+<section class="stats">
+  <div class="stat-card">
+    <span class="stat-num"><%= stats.total %></span>
+    <span class="stat-label">Reportes creados</span>
   </div>
-  <div class="step">
-    <span class="step-num">2</span>
-    <h3>Llega a tu estado</h3>
-    <p>El reporte se enruta automáticamente a las autoridades del estado seleccionado.</p>
+  <div class="stat-card stat-activos">
+    <span class="stat-num"><%= stats.activos %></span>
+    <span class="stat-label">Sin subsanar</span>
   </div>
-  <div class="step">
-    <span class="step-num">3</span>
-    <h3>Haz seguimiento</h3>
-    <p>Guarda tu código y consulta en cualquier momento si tu reporte fue atendido.</p>
+  <div class="stat-card stat-subsanados">
+    <span class="stat-num"><%= stats.subsanados %></span>
+    <span class="stat-label">Subsanados</span>
   </div>
+  <div class="stat-card">
+    <span class="stat-num"><%= stats.personas_afectadas %></span>
+    <span class="stat-label">Personas afectadas</span>
+  </div>
+</section>
+
+<section>
+  <h2 class="section-title">Reportes activos <span class="count">(<%= activos.length %>)</span></h2>
+  <% if (!activos.length) { %>
+    <div class="card center"><p class="muted">No hay reportes activos.</p></div>
+  <% } else { %>
+    <div class="reporte-grid">
+      <% activos.forEach(function(r){ tarjeta(r); }) %>
+    </div>
+  <% } %>
+</section>
+
+<section>
+  <h2 class="section-title">Reportes subsanados <span class="count">(<%= subsanados.length %>)</span></h2>
+  <% if (!subsanados.length) { %>
+    <div class="card center"><p class="muted">Aún no hay reportes subsanados.</p></div>
+  <% } else { %>
+    <div class="reporte-grid">
+      <% subsanados.forEach(function(r){ tarjeta(r); }) %>
+    </div>
+  <% } %>
 </section>
 
 <%- include('partials/footer') %>

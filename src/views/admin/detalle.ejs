@@ -1,0 +1,74 @@
+<%- include('../partials/header', { titulo: 'Moderar ' + reporte.codigo }) %>
+<%
+  function fecha(d){ return new Date(d).toLocaleString('es-VE'); }
+%>
+
+<p><a href="/admin" class="back-link">← Volver a moderación</a></p>
+
+<div class="card">
+  <div class="detalle-head">
+    <h1 class="mono"><%= reporte.codigo %></h1>
+    <% if (reporte.subsanado) { %><span class="badge badge-resuelto">Subsanado</span>
+    <% } else { %><span class="badge badge-recibido">Activo</span><% } %>
+  </div>
+
+  <dl class="resumen">
+    <div><dt>Persona</dt><dd><%= reporte.persona_nombre || '—' %></dd></div>
+    <div><dt>Estado</dt><dd><%= reporte.estado %></dd></div>
+    <div><dt>Tipo</dt><dd><%= reporte.tipo_emergencia %></dd></div>
+    <div><dt>Severidad</dt><dd><%= reporte.severidad %></dd></div>
+    <div><dt>Contacto</dt><dd><%= reporte.contacto_nombre || '—' %> <%= reporte.contacto_telefono || '' %></dd></div>
+    <div><dt>Visible</dt><dd><%= reporte.oculto ? 'Oculto' : 'Sí' %></dd></div>
+  </dl>
+
+  <h3>Descripción</h3>
+  <p class="descripcion"><%= reporte.descripcion %></p>
+
+  <% if (reporte.foto_url) { %>
+    <a href="<%= reporte.foto_url %>" target="_blank" rel="noopener">
+      <img class="evidencia" src="<%= reporte.foto_url %>" alt="Foto del reporte" />
+    </a>
+  <% } %>
+
+  <div class="actions">
+    <form action="/admin/reporte/<%= reporte.id %>/oculto" method="post" class="inline-form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <input type="hidden" name="oculto" value="<%= reporte.oculto ? 'false' : 'true' %>" />
+      <button class="btn btn-ghost"><%= reporte.oculto ? 'Mostrar reporte' : 'Ocultar reporte' %></button>
+    </form>
+    <% if (!reporte.subsanado) { %>
+      <form action="/admin/reporte/<%= reporte.id %>/subsanar" method="post" class="inline-form">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <button class="btn btn-primary">Forzar subsanado</button>
+      </form>
+    <% } %>
+  </div>
+</div>
+
+<section class="card">
+  <h2 class="section-title">Comentarios <span class="count">(<%= comentarios.length %>)</span></h2>
+  <% if (!comentarios.length) { %>
+    <p class="muted">Sin comentarios.</p>
+  <% } else { %>
+    <ul class="comentarios">
+      <% comentarios.forEach(function(c){ %>
+        <li class="comentario <%= c.oculto ? 'comentario-oculto' : '' %>">
+          <div class="comentario-head">
+            <strong><%= c.autor || 'Anónimo' %></strong>
+            <% if (c.es_confirmacion) { %><span class="chip-confirma">✓ confirma</span><% } %>
+            <% if (c.oculto) { %><span class="chip-oculto">oculto</span><% } %>
+            <span class="muted"><%= fecha(c.creado_en) %></span>
+          </div>
+          <p><%= c.cuerpo %></p>
+          <form action="/admin/comentario/<%= c.id %>/oculto" method="post" class="inline-form">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+            <input type="hidden" name="oculto" value="<%= c.oculto ? 'false' : 'true' %>" />
+            <button class="btn btn-sm btn-ghost"><%= c.oculto ? 'Mostrar' : 'Ocultar' %></button>
+          </form>
+        </li>
+      <% }) %>
+    </ul>
+  <% } %>
+</section>
+
+<%- include('../partials/footer') %>
