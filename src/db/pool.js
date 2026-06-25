@@ -55,7 +55,29 @@ pool.on('error', (err) => {
   console.error('Error inesperado en el pool de PostgreSQL:', err);
 });
 
-// Helper para consultas puntuales.
-const query = (text, params) => pool.query(text, params);
+// Errores transitorios (suspensión de Neon, cortes de red) que vale la pena
+// reintentar. Los errores de SQL tienen un SQLSTATE (p. ej. '23505') y NO se
+// reintentan; un error sin code suele ser un corte de conexión / arranque en frío.
+const ERRORES_TRANSITORIOS = new Set([
+  'ECONNRESET', 'ETIMEDOUT', 'ENOTFOUND', 'EPIPE',
+  '57P01', '57P03', '08006', '08001', 'XX000',
+]);
+
+// Helper para consultas con reintentos ante fallos transitorios (despierta la
+// base de Neon si estaba suspendida sin que el usuario reciba un error).
+async function query(text, params) {
+  let ultimoError;
+  for (let intento = 1; intento <= 3; intento++) {
+    try {
+      return await pool.query(text, params);
+    } catch (err) {
+      ultimoError = err;
+      const transitorio = !err.code || ERRORES_TRANSITORIOS.has(err.code);
+      if (!transitorio || intento === 3) throw err;
+      await new Promise((r) => setTimeout(r, 1500 * intento));
+    }
+  }
+  throw ultimoError;
+}
 
 module.exports = { pool, query };
