@@ -1,0 +1,111 @@
+<%- include('partials/header', { titulo: 'Crear reporte' }) %>
+<%
+  const v = valores || {};
+  const tipoLabels = {
+    medica: 'Emergencia médica', rescate: 'Rescate', refugio: 'Refugio',
+    agua: 'Agua', alimentos: 'Alimentos', desaparecido: 'Persona desaparecida',
+    dano_estructural: 'Daño estructural', otro: 'Otro'
+  };
+  const sevLabels = { baja: 'Baja', media: 'Media', alta: 'Alta', critica: 'Crítica' };
+%>
+
+<h1 class="page-title">Crear reporte</h1>
+<p class="muted">Los campos marcados con <span class="req">*</span> son obligatorios.</p>
+
+<% if (errores && errores.length) { %>
+  <div class="alert alert-error" role="alert">
+    <strong>Revisa lo siguiente:</strong>
+    <ul>
+      <% errores.forEach(function(e){ %><li><%= e %></li><% }) %>
+    </ul>
+  </div>
+<% } %>
+
+<form action="/reportar" method="post" enctype="multipart/form-data" class="card form" novalidate>
+  <div class="form-grid">
+    <div class="field">
+      <label for="estado">Estado <span class="req">*</span></label>
+      <select id="estado" name="estado" required>
+        <option value="">— Selecciona —</option>
+        <% estados.forEach(function(es){ %>
+          <option value="<%= es %>" <%= v.estado === es ? 'selected' : '' %>><%= es %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="tipo_emergencia">Tipo de emergencia <span class="req">*</span></label>
+      <select id="tipo_emergencia" name="tipo_emergencia" required>
+        <option value="">— Selecciona —</option>
+        <% tipos.forEach(function(t){ %>
+          <option value="<%= t %>" <%= v.tipo_emergencia === t ? 'selected' : '' %>><%= tipoLabels[t] || t %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="severidad">Severidad <span class="req">*</span></label>
+      <select id="severidad" name="severidad" required>
+        <% severidades.forEach(function(s){ %>
+          <option value="<%= s %>" <%= (v.severidad || 'media') === s ? 'selected' : '' %>><%= sevLabels[s] || s %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="personas_afectadas">Personas afectadas <span class="req">*</span></label>
+      <input type="number" id="personas_afectadas" name="personas_afectadas" min="0"
+             value="<%= v.personas_afectadas != null ? v.personas_afectadas : 1 %>" required />
+    </div>
+
+    <div class="field">
+      <label for="municipio">Municipio</label>
+      <input type="text" id="municipio" name="municipio" maxlength="120" value="<%= v.municipio || '' %>" />
+    </div>
+
+    <div class="field">
+      <label for="direccion">Dirección / sector</label>
+      <input type="text" id="direccion" name="direccion" maxlength="300" value="<%= v.direccion || '' %>" />
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="descripcion">Descripción de la situación <span class="req">*</span></label>
+    <textarea id="descripcion" name="descripcion" rows="5" minlength="10" maxlength="2000"
+              placeholder="¿Qué ocurrió? ¿Qué ayuda necesitan?" required><%= v.descripcion || '' %></textarea>
+  </div>
+
+  <fieldset class="field">
+    <legend>Contacto (opcional, ayuda a las autoridades a ubicarte)</legend>
+    <div class="form-grid">
+      <div class="field">
+        <label for="contacto_nombre">Nombre</label>
+        <input type="text" id="contacto_nombre" name="contacto_nombre" maxlength="120" value="<%= v.contacto_nombre || '' %>" />
+      </div>
+      <div class="field">
+        <label for="contacto_telefono">Teléfono</label>
+        <input type="tel" id="contacto_telefono" name="contacto_telefono" maxlength="40" value="<%= v.contacto_telefono || '' %>" />
+      </div>
+    </div>
+  </fieldset>
+
+  <div class="field">
+    <label for="foto">Foto (opcional, máx. 5 MB)</label>
+    <input type="file" id="foto" name="foto" accept="image/*" />
+  </div>
+
+  <!-- Ubicación GPS opcional, rellenada por /js/geo.js -->
+  <input type="hidden" id="lat" name="lat" value="<%= v.lat || '' %>" />
+  <input type="hidden" id="lng" name="lng" value="<%= v.lng || '' %>" />
+  <div class="field">
+    <button type="button" id="btn-ubicacion" class="btn btn-ghost">📍 Adjuntar mi ubicación actual</button>
+    <span id="ubicacion-estado" class="muted"></span>
+  </div>
+
+  <div class="actions">
+    <button type="submit" class="btn btn-primary btn-lg">Enviar reporte</button>
+  </div>
+</form>
+
+<script src="/js/geo.js"></script>
+<%- include('partials/footer') %>

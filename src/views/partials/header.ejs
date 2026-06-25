@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= typeof titulo !== 'undefined' ? titulo : 'Reportes Sismo Venezuela' %></title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/">
+      <span class="brand-mark" aria-hidden="true">▲</span>
+      <span>Reportes&nbsp;Sismo</span>
+    </a>
+    <nav class="topnav">
+      <a href="/reportar">Crear reporte</a>
+      <% if (typeof autoridad !== 'undefined' && autoridad) { %>
+        <a href="/panel">Panel</a>
+        <form action="/panel/logout" method="post" class="inline-form">
+          <button type="submit" class="link-btn">Salir</button>
+        </form>
+      <% } else { %>
+        <a href="/panel/login">Autoridades</a>
+      <% } %>
+    </nav>
+  </header>
+  <main class="container">

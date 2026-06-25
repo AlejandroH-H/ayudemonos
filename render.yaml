@@ -1,0 +1,44 @@
+# Blueprint de Render para el Sistema de Reportes Sismo.
+# La base de datos es Neon (externa), no se define aquí.
+# Las variables con sync:false se rellenan en el panel de Render (no en el repo).
+services:
+  - type: web
+    name: reportes-sismo
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm install
+    startCommand: node src/server.js
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      # Correo (valores fijos para Gmail; credenciales abajo como secretas)
+      - key: MAIL_TRANSPORT
+        value: smtp
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_SECURE
+        value: "false"
+      # Secreto de sesión generado por Render
+      - key: SESSION_SECRET
+        generateValue: true
+      # ── Secretas: rellénalas en el panel de Render ──
+      - key: DATABASE_URL
+        sync: false
+      - key: CLOUDINARY_URL
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+      # Pon aquí https://<nombre>.onrender.com tras el primer deploy
+      - key: APP_URL
+        sync: false

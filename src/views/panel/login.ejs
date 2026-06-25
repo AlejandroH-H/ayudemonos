@@ -1,0 +1,26 @@
+<%- include('../partials/header', { titulo: 'Acceso autoridades' }) %>
+
+<div class="card auth-card">
+  <h1>Panel de autoridades</h1>
+  <p class="muted">Accede para ver los reportes de tu estado.</p>
+
+  <% if (error) { %>
+    <div class="alert alert-error" role="alert"><%= error %></div>
+  <% } %>
+
+  <form action="/panel/login" method="post" class="form">
+    <div class="field">
+      <label for="email">Correo institucional</label>
+      <input type="email" id="email" name="email" required autocomplete="username" />
+    </div>
+    <div class="field">
+      <label for="password">Contraseña</label>
+      <input type="password" id="password" name="password" required autocomplete="current-password" />
+    </div>
+    <div class="actions">
+      <button type="submit" class="btn btn-primary btn-lg">Entrar</button>
+    </div>
+  </form>
+</div>
+
+<%- include('../partials/footer') %>

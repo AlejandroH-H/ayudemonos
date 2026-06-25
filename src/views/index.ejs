@@ -1,0 +1,35 @@
+<%- include('partials/header', { titulo: 'Reportes Sismo Venezuela' }) %>
+
+<section class="hero">
+  <p class="kicker">Atención a afectados por el sismo</p>
+  <h1>Reporta tu situación y llega directo a las autoridades de tu estado.</h1>
+  <p class="lead">
+    Si tú o tu comunidad necesitan ayuda —rescate, atención médica, refugio, agua o
+    alimentos— crea un reporte. Se envía automáticamente a Protección Civil del estado
+    que indiques y recibes un código para seguir su avance.
+  </p>
+  <div class="cta-row">
+    <a class="btn btn-primary btn-lg" href="/reportar">Crear un reporte ahora</a>
+    <a class="btn btn-ghost btn-lg" href="/panel/login">Soy una autoridad</a>
+  </div>
+</section>
+
+<section class="steps">
+  <div class="step">
+    <span class="step-num">1</span>
+    <h3>Describe la situación</h3>
+    <p>Indica el estado, el tipo de emergencia y qué está ocurriendo. Puedes adjuntar una foto.</p>
+  </div>
+  <div class="step">
+    <span class="step-num">2</span>
+    <h3>Llega a tu estado</h3>
+    <p>El reporte se enruta automáticamente a las autoridades del estado seleccionado.</p>
+  </div>
+  <div class="step">
+    <span class="step-num">3</span>
+    <h3>Haz seguimiento</h3>
+    <p>Guarda tu código y consulta en cualquier momento si tu reporte fue atendido.</p>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

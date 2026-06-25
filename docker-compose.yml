@@ -1,0 +1,25 @@
+# PostgreSQL para desarrollo local.
+#   Levantar:  docker compose up -d
+#   Detener:   docker compose down
+#   Borrar datos: docker compose down -v
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: reportes-sismo-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: reportes
+      POSTGRES_PASSWORD: reportes_dev
+      POSTGRES_DB: reportes_sismo
+    ports:
+      - "5433:5432"   # host 5433 -> contenedor 5432 (evita choque con un Postgres local)
+    volumes:
+      - reportes_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U reportes -d reportes_sismo"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  reportes_pgdata:

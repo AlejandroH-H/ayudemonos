@@ -1,0 +1,37 @@
+{
+  "name": "sistema-reportes-sismo",
+  "version": "1.0.0",
+  "description": "Sistema de reportes para personas afectadas por un sismo en Venezuela. Enruta cada reporte a las autoridades del estado correspondiente.",
+  "main": "src/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "db:setup": "node src/db/setup.js",
+    "test:cloudinary": "node scripts/test-cloudinary.js"
+  },
+  "keywords": [
+    "emergencia",
+    "sismo",
+    "reportes",
+    "venezuela"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
+    "bcryptjs": "^2.4.3",
+    "cloudinary": "^2.5.1",
+    "connect-pg-simple": "^9.0.1",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.4.1",
+    "express-session": "^1.18.1",
+    "express-validator": "^7.2.0",
+    "helmet": "^8.0.0",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.9.16",
+    "pg": "^8.13.1",
+    "ws": "^8.21.0"
+  }
+}

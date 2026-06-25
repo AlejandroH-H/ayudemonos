@@ -1,0 +1,9 @@
+<%- include('partials/header', { titulo: titulo || 'Error' }) %>
+<div class="card center">
+  <h1><%= titulo || 'Ocurrió un error' %></h1>
+  <p><%= mensaje || 'Algo salió mal.' %></p>
+  <div class="actions">
+    <a class="btn btn-primary" href="/">Volver al inicio</a>
+  </div>
+</div>
+<%- include('partials/footer') %>
