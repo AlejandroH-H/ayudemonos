@@ -16,6 +16,10 @@ services:
         value: production
       - key: NODE_VERSION
         value: "22"
+      # En Render la red permite TCP 5432: usar el driver pg estándar (más
+      # estable con el almacén de sesión que el WebSocket serverless de Neon).
+      - key: DB_DRIVER
+        value: pg
       # Secreto de sesión generado por Render (login del admin)
       - key: SESSION_SECRET
         generateValue: true

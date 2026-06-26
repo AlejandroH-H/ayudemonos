@@ -7,5 +7,5 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`\n🌐 Sistema de Reportes Sismo escuchando en http://localhost:${PORT}`);
   console.log(`   Reportar:  http://localhost:${PORT}/reportar`);
-  console.log(`   Panel:     http://localhost:${PORT}/panel/login\n`);
+  console.log(`   Admin:     http://localhost:${PORT}/admin/login\n`);
 });

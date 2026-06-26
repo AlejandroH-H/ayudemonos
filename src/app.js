@@ -57,7 +57,11 @@ const sessionOptions = {
   },
 };
 if (process.env.NODE_ENV === 'production') {
-  sessionOptions.store = new pgSession({ pool, tableName: 'session' });
+  sessionOptions.store = new pgSession({
+    pool,
+    tableName: 'session',
+    errorLog: console.error, // no dejar que un fallo del store tumbe el proceso
+  });
 }
 app.use(session(sessionOptions));
 
