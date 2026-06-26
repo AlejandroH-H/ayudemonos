@@ -22,7 +22,13 @@ if (esNeon) {
   // Driver serverless de Neon sobre WebSocket (puerto 443).
   const { Pool, neonConfig } = require('@neondatabase/serverless');
   neonConfig.webSocketConstructor = require('ws');
-  pool = new Pool({ connectionString: rawUrl });
+  // Cierra conexiones inactivas pronto para que la red no deje WebSockets
+  // "muertos" que luego fallan al reconectar (ETIMEDOUT en idle).
+  pool = new Pool({
+    connectionString: rawUrl,
+    idleTimeoutMillis: 15000,
+    max: 5,
+  });
   console.log('🗄  Driver de BD: Neon serverless (WebSocket/443)');
 } else {
   // Driver clásico node-postgres (TCP 5432).
