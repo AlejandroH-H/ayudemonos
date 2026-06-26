@@ -1,0 +1,31 @@
+<%- include('partials/header', { titulo: 'Teléfonos de emergencia' }) %>
+<%
+  // Construye un href tel: válido (conserva dígitos, * y #).
+  function telHref(t){ return 'tel:' + String(t).replace(/[^0-9*#]/g, ''); }
+%>
+
+<h1 class="page-title">Teléfonos de emergencia</h1>
+<div class="alert alert-info" role="note">
+  <strong>Emergencias nacionales: 171 / 911.</strong>
+  Números de referencia aportados por la comunidad; verifica antes de usar.
+</div>
+
+<% grupos.forEach(function(g){ %>
+  <section>
+    <h2 class="section-title"><%= g.ambito %></h2>
+    <div class="contactos-grid">
+      <% g.contactos.forEach(function(c){ %>
+        <div class="contacto-card">
+          <h3 class="contacto-nombre"><%= c.nombre %></h3>
+          <ul class="contacto-tels">
+            <% c.telefonos.forEach(function(t){ %>
+              <li><a href="<%= telHref(t) %>"><%= t %></a></li>
+            <% }) %>
+          </ul>
+        </div>
+      <% }) %>
+    </div>
+  </section>
+<% }) %>
+
+<%- include('partials/footer') %>

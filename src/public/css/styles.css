@@ -315,3 +315,17 @@ code { background: var(--fondo); padding: 0.1rem 0.35rem; border-radius: 5px; fo
 .check-row input { width: auto; }
 
 .acciones { display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center; }
+
+/* ─── Directorio de teléfonos ─── */
+.alert-info { background: #eaf1ff; border: 1px solid #c5d6ff; color: #1d4ed8; border-radius: 10px; padding: 0.85rem 1rem; margin: 1rem 0 1.5rem; }
+.contactos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.contacto-card { background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio); padding: 1rem 1.1rem; }
+.contacto-nombre { margin: 0 0 0.5rem; font-size: 1rem; }
+.contacto-tels { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.3rem; }
+.contacto-tels a { display: inline-block; font-family: ui-monospace, Menlo, Consolas, monospace; font-weight: 700; color: var(--rojo); text-decoration: none; font-size: 1.05rem; }
+.contacto-tels a:hover { text-decoration: underline; }
+
+/* Números de operadoras en el pie */
+.footer-operadoras { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.4rem 1.1rem; margin: 0.6rem 0 0; font-size: 0.85rem; }
+.footer-operadoras span { color: var(--gris); }
+.footer-operadoras b { color: var(--tinta); }

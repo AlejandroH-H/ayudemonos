@@ -29,6 +29,7 @@ const limiteComentarios = rateLimit({
 });
 
 router.get('/', ctrl.getInicio);
+router.get('/contactos', ctrl.getContactos);
 router.get('/reportar', ctrl.getFormulario);
 
 router.post(

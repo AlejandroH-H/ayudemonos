@@ -4,6 +4,7 @@ const { TIPOS, SEVERIDADES } = require('../middlewares/validate');
 const cloudinaryService = require('../services/cloudinary.service');
 const reportes = require('../services/reportes.service');
 const comentarios = require('../services/comentarios.service');
+const { contactosPorAmbito } = require('../data/contactos');
 
 // Datos comunes para renderizar el formulario de reporte.
 function datosFormulario(extra = {}) {
@@ -26,6 +27,11 @@ async function getInicio(req, res, next) {
 
 function getFormulario(req, res) {
   res.render('reportar', datosFormulario({ errores: [], valores: {} }));
+}
+
+// Directorio de teléfonos de emergencia.
+function getContactos(req, res) {
+  res.render('contactos', { grupos: contactosPorAmbito() });
 }
 
 async function postReporte(req, res, next) {
@@ -173,6 +179,7 @@ function notFound(res) {
 module.exports = {
   getInicio,
   getFormulario,
+  getContactos,
   postReporte,
   getCreado,
   getReporte,

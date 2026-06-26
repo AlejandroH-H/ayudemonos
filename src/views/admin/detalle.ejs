@@ -1,6 +1,5 @@
 <%- include('../partials/header', { titulo: 'Moderar ' + reporte.codigo }) %>
 <%
-  function fecha(d){ return new Date(d).toLocaleString('es-VE'); }
 %>
 
 <p><a href="/admin" class="back-link">← Volver a moderación</a></p>
@@ -57,7 +56,7 @@
             <strong><%= c.autor || 'Anónimo' %></strong>
             <% if (c.es_confirmacion) { %><span class="chip-confirma">✓ confirma</span><% } %>
             <% if (c.oculto) { %><span class="chip-oculto">oculto</span><% } %>
-            <span class="muted"><%= fecha(c.creado_en) %></span>
+            <span class="muted"><%= fmtFecha(c.creado_en) %></span>
           </div>
           <p><%= c.cuerpo %></p>
           <form action="/admin/comentario/<%= c.id %>/oculto" method="post" class="inline-form">

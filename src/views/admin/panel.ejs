@@ -1,6 +1,5 @@
 <%- include('../partials/header', { titulo: 'Moderación' }) %>
 <%
-  function fecha(d){ return new Date(d).toLocaleString('es-VE'); }
 %>
 
 <h1 class="page-title">Moderación de reportes</h1>
@@ -25,7 +24,7 @@
               <% } else { %><span class="badge badge-recibido">Activo</span><% } %>
             </td>
             <td><%= r.oculto ? '🚫 oculto' : '✓' %></td>
-            <td class="muted"><%= fecha(r.creado_en) %></td>
+            <td class="muted"><%= fmtFecha(r.creado_en) %></td>
             <td class="acciones">
               <a class="btn btn-sm" href="/admin/reporte/<%= r.id %>">Ver</a>
               <form action="/admin/reporte/<%= r.id %>/oculto" method="post" class="inline-form">

@@ -46,11 +46,19 @@ credenciales de `ADMIN_EMAIL` / `ADMIN_PASSWORD`.
 
 Verificación rápida de Cloudinary: `npm run test:cloudinary` (debe imprimir una `secure_url`).
 
+**Mantenimiento:** para borrar todos los reportes y comentarios (p. ej. datos de prueba)
+de forma segura: `npm run db:limpiar -- --si` (reinicia los IDs, no toca `admins`). Sin el
+flag `--si` solo avisa, no borra.
+
+Las fechas se muestran siempre en hora de Venezuela (`America/Caracas`), sin importar la
+zona horaria del servidor (helper `src/utils/fecha.js`).
+
 ## Rutas
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
 | GET  | `/` | Portada: estadísticas + listas de activos y subsanados |
+| GET  | `/contactos` | Directorio de teléfonos de emergencia (datos en `src/data/contactos.js`) |
 | GET/POST | `/reportar` | Crear reporte (foto opcional → Cloudinary) |
 | GET  | `/reporte/:codigo/creado` | Confirmación con el código de resolución |
 | GET  | `/reporte/:codigo` | Detalle público + comentarios |

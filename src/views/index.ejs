@@ -4,7 +4,6 @@
     medica: 'Médica', rescate: 'Rescate', refugio: 'Refugio', agua: 'Agua',
     alimentos: 'Alimentos', desaparecido: 'Desaparecido', dano_estructural: 'Daño estructural', otro: 'Otro'
   };
-  function fecha(d){ return new Date(d).toLocaleString('es-VE'); }
   function tarjeta(r){
 %>
   <a class="reporte-card" href="/reporte/<%= r.codigo %>">
@@ -17,7 +16,7 @@
     <p class="reporte-card-desc"><%= r.descripcion.length > 120 ? r.descripcion.slice(0,120) + '…' : r.descripcion %></p>
     <div class="reporte-card-meta">
       <span>📍 <%= r.estado %></span>
-      <span><%= fecha(r.creado_en) %></span>
+      <span><%= fmtFecha(r.creado_en) %></span>
     </div>
   </a>
 <% } %>

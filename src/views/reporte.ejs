@@ -4,7 +4,6 @@
     medica: 'Emergencia médica', rescate: 'Rescate', refugio: 'Refugio', agua: 'Agua',
     alimentos: 'Alimentos', desaparecido: 'Persona desaparecida', dano_estructural: 'Daño estructural', otro: 'Otro'
   };
-  function fecha(d){ return new Date(d).toLocaleString('es-VE'); }
 %>
 
 <p><a href="/" class="back-link">← Volver al inicio</a></p>
@@ -30,9 +29,9 @@
       <div><dt>Municipio</dt><dd><%= reporte.municipio || '—' %></dd></div>
       <div><dt>Dirección</dt><dd><%= reporte.direccion || '—' %></dd></div>
       <div><dt>Personas afectadas</dt><dd><%= reporte.personas_afectadas %></dd></div>
-      <div><dt>Publicado</dt><dd><%= fecha(reporte.creado_en) %></dd></div>
+      <div><dt>Publicado</dt><dd><%= fmtFecha(reporte.creado_en) %></dd></div>
       <% if (reporte.subsanado) { %>
-        <div><dt>Subsanado</dt><dd><%= fecha(reporte.subsanado_en) %></dd></div>
+        <div><dt>Subsanado</dt><dd><%= fmtFecha(reporte.subsanado_en) %></dd></div>
       <% } %>
     </dl>
 
@@ -97,7 +96,7 @@
           <div class="comentario-head">
             <strong><%= c.autor || 'Anónimo' %></strong>
             <% if (c.es_confirmacion) { %><span class="chip-confirma">✓ confirma hallazgo</span><% } %>
-            <span class="muted"><%= fecha(c.creado_en) %></span>
+            <span class="muted"><%= fmtFecha(c.creado_en) %></span>
           </div>
           <p><%= c.cuerpo %></p>
         </li>

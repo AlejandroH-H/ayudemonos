@@ -8,6 +8,7 @@
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "db:setup": "node src/db/setup.js",
+    "db:limpiar": "node scripts/limpiar-datos.js",
     "test:cloudinary": "node scripts/test-cloudinary.js"
   },
   "keywords": [
