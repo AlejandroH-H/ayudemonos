@@ -16,10 +16,10 @@ async function crearReporte(data) {
   const codigo = generarCodigo();
   const { rows } = await query(
     `INSERT INTO reportes
-       (codigo, estado, municipio, direccion, lat, lng, persona_nombre,
+       (codigo, estado, municipio, direccion, lat, lng, persona_nombre, cedula,
         tipo_emergencia, severidad, descripcion, personas_afectadas,
         contacto_nombre, contacto_telefono, foto_url)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
      RETURNING *`,
     [
       codigo,
@@ -29,6 +29,7 @@ async function crearReporte(data) {
       data.lat ?? null,
       data.lng ?? null,
       data.persona_nombre || null,
+      data.cedula || null,
       data.tipo_emergencia,
       data.severidad,
       data.descripcion,
@@ -51,8 +52,15 @@ async function obtenerPorCodigo(codigo, incluirOcultos = false) {
   return rows[0] || null;
 }
 
-async function obtenerPorId(id) {
-  const { rows } = await query('SELECT * FROM reportes WHERE id = $1', [id]);
+// Consulta por id numérico. Para uso público excluye los ocultos.
+async function obtenerPorId(id, incluirOcultos = false) {
+  const n = parseInt(id, 10);
+  if (!Number.isInteger(n)) return null;
+  const { rows } = await query(
+    `SELECT * FROM reportes
+     WHERE id = $1 ${incluirOcultos ? '' : 'AND oculto = false'}`,
+    [n]
+  );
   return rows[0] || null;
 }
 

@@ -42,11 +42,12 @@ router.post(
   ctrl.postReporte
 );
 
-router.get('/reporte/:codigo/creado', ctrl.getCreado);
-router.get('/reporte/:codigo', ctrl.getReporte);
+// Las URLs públicas usan el id numérico; el código de resolución es secreto
+// y solo se le muestra al creador en la confirmación.
+router.get('/reporte/:id', ctrl.getReporte);
 
 router.post(
-  '/reporte/:codigo/comentario',
+  '/reporte/:id/comentario',
   limiteComentarios,
   verificarCsrf,
   reglasComentario,
@@ -54,6 +55,13 @@ router.post(
   ctrl.postComentario
 );
 
-router.post('/reporte/:codigo/subsanar', verificarCsrf, ctrl.postSubsanar);
+router.post('/reporte/:id/subsanar', verificarCsrf, ctrl.postSubsanar);
+
+router.post(
+  '/reporte/:id/necesidad/cubierto',
+  limiteComentarios,
+  verificarCsrf,
+  ctrl.postNecesidadCubierto
+);
 
 module.exports = router;

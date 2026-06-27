@@ -11,6 +11,7 @@ const publicRoutes = require('./routes/public.routes');
 const adminRoutes = require('./routes/admin.routes');
 const { proveerCsrf } = require('./middlewares/csrf');
 const { formatFecha } = require('./utils/fecha');
+const { icono } = require('./utils/iconos');
 
 const app = express();
 
@@ -74,6 +75,7 @@ app.use((req, res, next) => {
   res.locals.admin = req.session.admin || null;
   res.locals.appUrl = process.env.APP_URL || '';
   res.locals.fmtFecha = formatFecha; // hora de Venezuela en todas las vistas
+  res.locals.icono = icono; // iconos SVG en línea (Lucide) en todas las vistas
   next();
 });
 

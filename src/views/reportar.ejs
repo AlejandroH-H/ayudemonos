@@ -7,6 +7,7 @@
     dano_estructural: 'Daño estructural', otro: 'Otro'
   };
   const sevLabels = { baja: 'Baja', media: 'Media', alta: 'Alta', critica: 'Crítica' };
+  const necSel = new Set([].concat(v.necesidades || []));
 %>
 
 <h1 class="page-title">Crear reporte</h1>
@@ -24,11 +25,19 @@
 <form action="/reportar" method="post" enctype="multipart/form-data" class="card form" novalidate>
   <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
 
-  <div class="field">
-    <label for="persona_nombre">Nombre de la persona afectada / buscada</label>
-    <input type="text" id="persona_nombre" name="persona_nombre" maxlength="120"
-           placeholder="Opcional — déjalo vacío si es una situación general"
-           value="<%= v.persona_nombre || '' %>" />
+  <div class="form-grid">
+    <div class="field">
+      <label for="persona_nombre">Nombre de la persona afectada / buscada</label>
+      <input type="text" id="persona_nombre" name="persona_nombre" maxlength="120"
+             placeholder="Opcional — déjalo vacío si es una situación general"
+             value="<%= v.persona_nombre || '' %>" />
+    </div>
+    <div class="field">
+      <label for="cedula">Cédula de identidad</label>
+      <input type="text" id="cedula" name="cedula" maxlength="20"
+             placeholder="Opcional — ej. V-12.345.678"
+             value="<%= v.cedula || '' %>" />
+    </div>
   </div>
 
   <div class="form-grid">
@@ -84,6 +93,39 @@
               placeholder="¿Qué ocurrió? ¿Qué ayuda necesitan?" required><%= v.descripcion || '' %></textarea>
   </div>
 
+  <fieldset class="field necesidades-fieldset">
+    <legend>Necesidades urgentes (opcional)</legend>
+    <p class="muted">Marca lo que se necesita e indica una cantidad si la conoces.</p>
+    <% necesidadesCatalogo.forEach(function(grupo){ %>
+      <div class="nec-grupo">
+        <h4 class="nec-grupo-titulo"><%= grupo.grupo %></h4>
+        <div class="nec-items">
+          <% grupo.items.forEach(function(it){ %>
+            <div class="nec-item">
+              <label class="check-row">
+                <input type="checkbox" name="necesidades[]" value="<%= it.clave %>"
+                       <%= necSel.has(it.clave) ? 'checked' : '' %> />
+                <span class="nec-label"><%- icono(it.icono) %> <%= it.etiqueta %></span>
+              </label>
+              <input type="text" class="nec-cantidad" name="cantidad_<%= it.clave %>"
+                     maxlength="40" placeholder="cantidad"
+                     value="<%= v['cantidad_' + it.clave] || '' %>" />
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    <% }) %>
+    <div class="nec-item nec-otro">
+      <div class="field">
+        <label for="necesidad_otro">Otro (especifica)</label>
+        <input type="text" id="necesidad_otro" name="necesidad_otro" maxlength="80"
+               placeholder="Algo no listado" value="<%= v.necesidad_otro || '' %>" />
+      </div>
+      <input type="text" class="nec-cantidad" name="cantidad_otro" maxlength="40"
+             placeholder="cantidad" value="<%= v.cantidad_otro || '' %>" />
+    </div>
+  </fieldset>
+
   <fieldset class="field">
     <legend>Contacto (opcional, ayuda a quienes puedan auxiliar)</legend>
     <div class="form-grid">
@@ -107,7 +149,7 @@
   <input type="hidden" id="lat" name="lat" value="<%= v.lat || '' %>" />
   <input type="hidden" id="lng" name="lng" value="<%= v.lng || '' %>" />
   <div class="field">
-    <button type="button" id="btn-ubicacion" class="btn btn-ghost">📍 Adjuntar mi ubicación actual</button>
+    <button type="button" id="btn-ubicacion" class="btn btn-ghost"><%- icono('map-pin') %> Adjuntar mi ubicación actual</button>
     <span id="ubicacion-estado" class="muted"></span>
   </div>
 

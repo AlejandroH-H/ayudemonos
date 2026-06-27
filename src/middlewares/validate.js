@@ -32,6 +32,7 @@ const reglasReporte = [
     .isLength({ min: 10, max: 2000 })
     .withMessage('La descripción debe tener entre 10 y 2000 caracteres.'),
   body('persona_nombre').trim().isLength({ max: 120 }).optional({ values: 'falsy' }),
+  body('cedula').trim().isLength({ max: 20 }).optional({ values: 'falsy' }),
   body('municipio').trim().isLength({ max: 120 }).optional({ values: 'falsy' }),
   body('direccion').trim().isLength({ max: 300 }).optional({ values: 'falsy' }),
   body('personas_afectadas')
@@ -50,6 +51,7 @@ const reglasComentario = [
     .isLength({ min: 2, max: 1000 })
     .withMessage('El comentario debe tener entre 2 y 1000 caracteres.'),
   body('autor').trim().isLength({ max: 80 }).optional({ values: 'falsy' }),
+  body('parent_id').optional({ values: 'falsy' }).toInt().isInt({ min: 1 }),
 ];
 
 // Recoge los errores de validación en req.erroresValidacion (array de mensajes).

@@ -23,7 +23,7 @@
               <% if (r.subsanado) { %><span class="badge badge-resuelto">Subsanado</span>
               <% } else { %><span class="badge badge-recibido">Activo</span><% } %>
             </td>
-            <td><%= r.oculto ? '🚫 oculto' : '✓' %></td>
+            <td><% if (r.oculto) { %><span class="chip-oculto"><%- icono('eye-off', { size: 13 }) %> oculto</span><% } else { %><%- icono('check', { size: 15 }) %><% } %></td>
             <td class="muted"><%= fmtFecha(r.creado_en) %></td>
             <td class="acciones">
               <a class="btn btn-sm" href="/admin/reporte/<%= r.id %>">Ver</a>

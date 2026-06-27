@@ -13,6 +13,7 @@
 
   <dl class="resumen">
     <div><dt>Persona</dt><dd><%= reporte.persona_nombre || '—' %></dd></div>
+    <div><dt>Cédula</dt><dd><%= reporte.cedula || '—' %></dd></div>
     <div><dt>Estado</dt><dd><%= reporte.estado %></dd></div>
     <div><dt>Tipo</dt><dd><%= reporte.tipo_emergencia %></dd></div>
     <div><dt>Severidad</dt><dd><%= reporte.severidad %></dd></div>
@@ -44,8 +45,29 @@
   </div>
 </div>
 
+<% if (necesidades && necesidades.length) { %>
 <section class="card">
-  <h2 class="section-title">Comentarios <span class="count">(<%= comentarios.length %>)</span></h2>
+  <h2 class="section-title">Necesidades urgentes <span class="count">(<%= necesidades.length %>)</span></h2>
+  <ul class="necesidades">
+    <% necesidades.forEach(function(n){ %>
+      <li class="necesidad <%= n.cubierto ? 'necesidad-cubierta' : '' %>">
+        <span class="necesidad-nombre">
+          <%- icono(n.icono) %>
+          <%= n.etiqueta %><% if (n.cantidad) { %> <span class="muted">(<%= n.cantidad %>)</span><% } %>
+        </span>
+        <% if (n.cubierto) { %><span class="chip-cubierto"><%- icono('check', { size: 14 }) %> cubierto</span><% } %>
+      </li>
+    <% }) %>
+  </ul>
+</section>
+<% } %>
+
+<section class="card">
+  <%
+    let totalComentarios = 0;
+    comentarios.forEach(function(c){ totalComentarios += 1 + c.respuestas.length; });
+  %>
+  <h2 class="section-title">Comentarios <span class="count">(<%= totalComentarios %>)</span></h2>
   <% if (!comentarios.length) { %>
     <p class="muted">Sin comentarios.</p>
   <% } else { %>
@@ -54,7 +76,7 @@
         <li class="comentario <%= c.oculto ? 'comentario-oculto' : '' %>">
           <div class="comentario-head">
             <strong><%= c.autor || 'Anónimo' %></strong>
-            <% if (c.es_confirmacion) { %><span class="chip-confirma">✓ confirma</span><% } %>
+            <% if (c.es_confirmacion) { %><span class="chip-confirma"><%- icono('check', { size: 13 }) %> confirma</span><% } %>
             <% if (c.oculto) { %><span class="chip-oculto">oculto</span><% } %>
             <span class="muted"><%= fmtFecha(c.creado_en) %></span>
           </div>
@@ -64,6 +86,26 @@
             <input type="hidden" name="oculto" value="<%= c.oculto ? 'false' : 'true' %>" />
             <button class="btn btn-sm btn-ghost"><%= c.oculto ? 'Mostrar' : 'Ocultar' %></button>
           </form>
+
+          <% if (c.respuestas.length) { %>
+            <ul class="respuestas">
+              <% c.respuestas.forEach(function(r){ %>
+                <li class="comentario <%= r.oculto ? 'comentario-oculto' : '' %>">
+                  <div class="comentario-head">
+                    <strong><%= r.autor || 'Anónimo' %></strong>
+                    <% if (r.oculto) { %><span class="chip-oculto">oculto</span><% } %>
+                    <span class="muted"><%= fmtFecha(r.creado_en) %></span>
+                  </div>
+                  <p><%= r.cuerpo %></p>
+                  <form action="/admin/comentario/<%= r.id %>/oculto" method="post" class="inline-form">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                    <input type="hidden" name="oculto" value="<%= r.oculto ? 'false' : 'true' %>" />
+                    <button class="btn btn-sm btn-ghost"><%= r.oculto ? 'Mostrar' : 'Ocultar' %></button>
+                  </form>
+                </li>
+              <% }) %>
+            </ul>
+          <% } %>
         </li>
       <% }) %>
     </ul>

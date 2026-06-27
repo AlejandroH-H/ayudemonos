@@ -1,7 +1,7 @@
 <%- include('partials/header', { titulo: 'Reporte publicado' }) %>
 
 <div class="card confirm">
-  <div class="confirm-check" aria-hidden="true">✓</div>
+  <div class="confirm-check" aria-hidden="true"><%- icono('check', { size: 36 }) %></div>
   <h1>Reporte publicado</h1>
   <p>Tu reporte ya es visible para la comunidad.</p>
 
@@ -12,7 +12,7 @@
     solo con quien confíes.</p>
 
   <div class="actions">
-    <a class="btn btn-primary" href="/reporte/<%= reporte.codigo %>">Ver mi reporte</a>
+    <a class="btn btn-primary" href="/reporte/<%= reporte.id %>">Ver mi reporte</a>
     <a class="btn btn-ghost" href="/">Ir al inicio</a>
   </div>
 </div>

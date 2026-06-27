@@ -314,6 +314,51 @@ code { background: var(--fondo); padding: 0.1rem 0.35rem; border-radius: 5px; fo
 .check-row { display: flex; align-items: center; gap: 0.5rem; margin: 0.25rem 0 0.75rem; font-size: 0.92rem; }
 .check-row input { width: auto; }
 
+/* Hilos de respuesta */
+.respuestas { list-style: none; margin: 0.6rem 0 0; padding: 0 0 0 0.9rem; border-left: 2px solid var(--linea); display: flex; flex-direction: column; gap: 0.5rem; }
+.respuestas .comentario { background: var(--blanco); border: 1px solid var(--linea); }
+.reply-toggle { margin-top: 0.5rem; }
+.reply-toggle > summary { cursor: pointer; color: var(--azul); font-size: 0.85rem; font-weight: 600; list-style: none; width: max-content; }
+.reply-toggle > summary::-webkit-details-marker { display: none; }
+.reply-toggle[open] > summary { margin-bottom: 0.5rem; }
+.comentario-reply-form { margin: 0; }
+
+/* Iconos SVG en línea (Lucide) */
+.icono { display: inline-block; vertical-align: -0.15em; flex: none; }
+.brand-mark { display: inline-flex; align-items: center; }
+.confirmaciones-tag, .resuelto-msg, .meta-icono, .nec-label { display: inline-flex; align-items: center; gap: 0.35rem; }
+.chip-cubierto, .chip-confirma, .chip-oculto { display: inline-flex; align-items: center; gap: 0.25rem; }
+
+/* Necesidades urgentes */
+.necesidades { list-style: none; margin: 0.5rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.necesidad { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; background: var(--fondo); border-radius: 10px; padding: 0.55rem 0.85rem; }
+.necesidad-nombre { display: inline-flex; align-items: center; gap: 0.45rem; font-weight: 600; }
+.necesidad-nombre .icono { color: var(--rojo); }
+.necesidad-cubierta { opacity: 0.6; }
+.necesidad-cubierta .necesidad-nombre { text-decoration: line-through; }
+.necesidad-cubierta .necesidad-nombre .icono { color: var(--gris-cl); }
+.chip-cubierto { background: #d7f0e0; color: var(--verde); border-radius: 999px; padding: 0.1rem 0.55rem; font-size: 0.72rem; font-weight: 700; }
+/* Gestión de necesidades (solo el creador, con su código) */
+.necesidad-codigo { margin-top: 1rem; padding-top: 0.85rem; border-top: 1px solid var(--linea); }
+.necesidad-codigo label { font-weight: 500; }
+.necesidad-codigo input { max-width: 16rem; text-transform: uppercase; }
+.necesidad-codigo .muted { margin: 0.35rem 0 0; font-size: 0.85rem; }
+
+/* Selector de necesidades en el formulario */
+.necesidades-fieldset .nec-grupo { margin-top: 0.75rem; }
+.nec-grupo-titulo { margin: 0 0 0.4rem; font-size: 0.9rem; color: var(--gris); }
+.nec-items { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.4rem 1rem; }
+.nec-item { display: flex; align-items: center; gap: 0.5rem; }
+.nec-item .check-row { flex: 1; margin: 0; }
+.nec-cantidad { width: 6.5rem; flex: none; }
+.nec-otro { margin-top: 0.75rem; align-items: flex-end; }
+.nec-otro .field { flex: 1; margin: 0; }
+
+/* Estado de la geolocalización */
+.ubicacion-cargando { color: var(--azul); font-style: italic; }
+.ubicacion-ok { color: var(--verde); font-weight: 600; }
+.ubicacion-error { color: var(--ambar); }
+
 .acciones { display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center; }
 
 /* ─── Directorio de teléfonos ─── */

@@ -1,4 +1,4 @@
-<%- include('partials/header', { titulo: 'Reporte ' + reporte.codigo }) %>
+<%- include('partials/header', { titulo: 'Reporte de la comunidad' }) %>
 <%
   const tipoLabels = {
     medica: 'Emergencia médica', rescate: 'Rescate', refugio: 'Refugio', agua: 'Agua',
@@ -25,6 +25,9 @@
     </div>
 
     <dl class="resumen">
+      <% if (reporte.cedula) { %>
+        <div><dt>Cédula</dt><dd><%= reporte.cedula %></dd></div>
+      <% } %>
       <div><dt>Estado</dt><dd><%= reporte.estado %></dd></div>
       <div><dt>Municipio</dt><dd><%= reporte.municipio || '—' %></dd></div>
       <div><dt>Dirección</dt><dd><%= reporte.direccion || '—' %></dd></div>
@@ -56,14 +59,14 @@
   <aside class="card subsanar-box">
     <h3>Estado del reporte</h3>
     <% if (reporte.subsanado) { %>
-      <p class="resuelto-msg">✓ Este reporte fue marcado como <strong>subsanado</strong>.</p>
+      <p class="resuelto-msg"><%- icono('check', { size: 16 }) %> Este reporte fue marcado como <strong>subsanado</strong>.</p>
     <% } else { %>
       <p>¿La persona fue encontrada o la situación se resolvió? Si tienes el
         <strong>código de resolución</strong>, márcalo como subsanado:</p>
       <% if (subsanarError) { %>
         <div class="alert alert-error" role="alert"><%= subsanarError %></div>
       <% } %>
-      <form action="/reporte/<%= reporte.codigo %>/subsanar" method="post" class="form">
+      <form action="/reporte/<%= reporte.id %>/subsanar" method="post" class="form">
         <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
         <div class="field">
           <label for="codigo">Código de resolución</label>
@@ -73,13 +76,52 @@
       </form>
     <% } %>
     <p class="confirmaciones-tag" title="Confirmaciones de la comunidad">
-      🙌 <%= confirmaciones %> confirmación(es) de la comunidad
+      <%- icono('users', { size: 16 }) %> <%= confirmaciones %> confirmación(es) de la comunidad
     </p>
   </aside>
 </div>
 
+<% if (necesidades && necesidades.length) { %>
+<section id="necesidades" class="card">
+  <h2 class="section-title">Necesidades urgentes <span class="count">(<%= necesidades.length %>)</span></h2>
+
+  <% if (necesidadesError) { %>
+    <div class="alert alert-error" role="alert"><%= necesidadesError %></div>
+  <% } %>
+
+  <% const hayPendientes = necesidades.some(function(n){ return !n.cubierto; }); %>
+  <form action="/reporte/<%= reporte.id %>/necesidad/cubierto" method="post">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+    <ul class="necesidades">
+      <% necesidades.forEach(function(n){ %>
+        <li class="necesidad <%= n.cubierto ? 'necesidad-cubierta' : '' %>">
+          <span class="necesidad-nombre">
+            <%- icono(n.icono) %>
+            <%= n.etiqueta %><% if (n.cantidad) { %> <span class="muted">(<%= n.cantidad %>)</span><% } %>
+          </span>
+          <% if (n.cubierto) { %>
+            <span class="chip-cubierto"><%- icono('check', { size: 14 }) %> cubierto</span>
+          <% } else { %>
+            <button type="submit" name="necesidad_id" value="<%= n.id %>" class="btn btn-sm btn-ghost">Marcar cubierto</button>
+          <% } %>
+        </li>
+      <% }) %>
+    </ul>
+
+    <% if (hayPendientes) { %>
+      <div class="field necesidad-codigo">
+        <label for="cod-nec">¿Creaste este reporte? Ingresa tu <strong>código de resolución</strong> para marcar lo que ya fue cubierto:</label>
+        <input type="text" id="cod-nec" name="codigo" placeholder="SIS-XXXXXX" autocomplete="off" />
+        <p class="muted">Si no eres quien lo creó, puedes confirmarlo en los comentarios.</p>
+      </div>
+    <% } %>
+  </form>
+</section>
+<% } %>
+
 <section id="comentarios" class="card">
-  <h2 class="section-title">Comentarios <span class="count">(<%= comentarios.length %>)</span></h2>
+  <% let totalComentarios = 0; comentarios.forEach(function(c){ totalComentarios += 1 + c.respuestas.length; }); %>
+  <h2 class="section-title">Comentarios <span class="count">(<%= totalComentarios %>)</span></h2>
 
   <% if (errores && errores.length) { %>
     <div class="alert alert-error" role="alert">
@@ -95,17 +137,51 @@
         <li class="comentario <%= c.es_confirmacion ? 'comentario-confirma' : '' %>">
           <div class="comentario-head">
             <strong><%= c.autor || 'Anónimo' %></strong>
-            <% if (c.es_confirmacion) { %><span class="chip-confirma">✓ confirma hallazgo</span><% } %>
+            <% if (c.es_confirmacion) { %><span class="chip-confirma"><%- icono('check', { size: 13 }) %> confirma hallazgo</span><% } %>
             <span class="muted"><%= fmtFecha(c.creado_en) %></span>
           </div>
           <p><%= c.cuerpo %></p>
+
+          <% if (c.respuestas.length) { %>
+            <ul class="respuestas">
+              <% c.respuestas.forEach(function(r){ %>
+                <li class="comentario">
+                  <div class="comentario-head">
+                    <strong><%= r.autor || 'Anónimo' %></strong>
+                    <span class="muted"><%= fmtFecha(r.creado_en) %></span>
+                  </div>
+                  <p><%= r.cuerpo %></p>
+                </li>
+              <% }) %>
+            </ul>
+          <% } %>
+
+          <details class="reply-toggle">
+            <summary>Responder</summary>
+            <form action="/reporte/<%= reporte.id %>/comentario" method="post" class="form comentario-reply-form">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+              <input type="hidden" name="parent_id" value="<%= c.id %>" />
+              <div class="field">
+                <label for="autor-<%= c.id %>">Tu nombre (opcional)</label>
+                <input type="text" id="autor-<%= c.id %>" name="autor" maxlength="80" placeholder="Anónimo" />
+              </div>
+              <div class="field">
+                <label for="cuerpo-<%= c.id %>">Respuesta <span class="req">*</span></label>
+                <textarea id="cuerpo-<%= c.id %>" name="cuerpo" rows="2" minlength="2" maxlength="1000" required
+                          placeholder="Escribe tu respuesta…"></textarea>
+              </div>
+              <div class="actions">
+                <button type="submit" class="btn btn-sm btn-primary">Responder</button>
+              </div>
+            </form>
+          </details>
         </li>
       <% }) %>
     </ul>
   <% } %>
 
   <h3>Añadir un comentario</h3>
-  <form action="/reporte/<%= reporte.codigo %>/comentario" method="post" class="form">
+  <form action="/reporte/<%= reporte.id %>/comentario" method="post" class="form">
     <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
     <div class="form-grid">
       <div class="field">

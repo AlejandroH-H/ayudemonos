@@ -6,7 +6,7 @@
   };
   function tarjeta(r){
 %>
-  <a class="reporte-card" href="/reporte/<%= r.codigo %>">
+  <a class="reporte-card" href="/reporte/<%= r.id %>">
     <div class="reporte-card-top">
       <span class="sev-tag sev-tag-<%= r.severidad %>"><%= r.severidad %></span>
       <span class="tipo-pill"><%= tipoLabels[r.tipo_emergencia] || r.tipo_emergencia %></span>
@@ -15,7 +15,7 @@
     <h3 class="reporte-card-title"><%= r.persona_nombre ? r.persona_nombre : (r.estado + (r.municipio ? ' — ' + r.municipio : '')) %></h3>
     <p class="reporte-card-desc"><%= r.descripcion.length > 120 ? r.descripcion.slice(0,120) + '…' : r.descripcion %></p>
     <div class="reporte-card-meta">
-      <span>📍 <%= r.estado %></span>
+      <span class="meta-icono"><%- icono('map-pin', { size: 14 }) %> <%= r.estado %></span>
       <span><%= fmtFecha(r.creado_en) %></span>
     </div>
   </a>

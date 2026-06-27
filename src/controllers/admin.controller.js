@@ -3,6 +3,8 @@ const bcrypt = require('bcryptjs');
 const { query } = require('../db/pool');
 const reportes = require('../services/reportes.service');
 const comentarios = require('../services/comentarios.service');
+const necesidades = require('../services/necesidades.service');
+const { iconoDe } = require('../db/necesidades');
 
 function getLogin(req, res) {
   if (req.session.admin) return res.redirect('/admin');
@@ -42,15 +44,25 @@ async function getPanel(req, res, next) {
 // Detalle de moderación: reporte + comentarios (incluidos ocultos).
 async function getDetalle(req, res, next) {
   try {
-    const reporte = await reportes.obtenerPorId(req.params.id);
+    const reporte = await reportes.obtenerPorId(req.params.id, true);
     if (!reporte) {
       return res.status(404).render('error', {
         titulo: 'Reporte no encontrado',
         mensaje: 'Ese reporte no existe.',
       });
     }
-    const lista = await comentarios.listarPorReporte(reporte.id, true);
-    res.render('admin/detalle', { reporte, comentarios: lista });
+    const [lista, listaNecesidades] = await Promise.all([
+      comentarios.listarPorReporte(reporte.id, true),
+      necesidades.listarPorReporte(reporte.id),
+    ]);
+    listaNecesidades.forEach((n) => {
+      n.icono = iconoDe(n.item);
+    });
+    res.render('admin/detalle', {
+      reporte,
+      comentarios: comentarios.armarHilos(lista),
+      necesidades: listaNecesidades,
+    });
   } catch (err) {
     next(err);
   }
